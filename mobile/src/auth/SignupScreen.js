@@ -22,6 +22,8 @@ export default function SignupScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Auto-generate subdomain suggestion from display name
   function handleDisplayNameChange(text) {
@@ -139,26 +141,44 @@ export default function SignupScreen({ navigation }) {
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="At least 6 characters"
-            placeholderTextColor={colors.placeholder}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="At least 6 characters"
+              placeholderTextColor={colors.placeholder}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Re-enter your password"
-            placeholderTextColor={colors.placeholder}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Re-enter your password"
+              placeholderTextColor={colors.placeholder}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.eyeIcon}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -249,6 +269,30 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     fontSize: typography.sizes.md,
     color: colors.textPrimary,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: spacing.md,
+    fontSize: typography.sizes.md,
+    color: colors.textPrimary,
+  },
+  eyeButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    justifyContent: 'center',
+  },
+  eyeIcon: {
+    fontSize: typography.sizes.sm,
+    color: colors.gold,
+    fontWeight: typography.weights.semibold,
   },
   subdomainHint: {
     fontSize: typography.sizes.xs,
