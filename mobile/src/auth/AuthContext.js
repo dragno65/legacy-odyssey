@@ -29,19 +29,33 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const res = await post('/api/auth/login', { email, password });
-    const { token: newToken, user: userData } = res.data;
+    const { family, session } = res.data;
+    const newToken = session.access_token;
     await setToken(newToken);
     setTokenState(newToken);
-    setUser({ ...userData, token: newToken });
+    setUser({ ...family, token: newToken });
+    // Store refresh token for later use
+    try {
+      await import('expo-secure-store').then(m =>
+        m.setItemAsync('legacy_odyssey_refresh', session.refresh_token)
+      );
+    } catch (e) { /* ignore */ }
     return res.data;
   }, []);
 
-  const signup = useCallback(async (email, password, displayName) => {
-    const res = await post('/api/auth/signup', { email, password, displayName });
-    const { token: newToken, user: userData } = res.data;
+  const signup = useCallback(async (email, password, subdomain, displayName) => {
+    const res = await post('/api/auth/signup', { email, password, subdomain, displayName });
+    const { family, session } = res.data;
+    const newToken = session.access_token;
     await setToken(newToken);
     setTokenState(newToken);
-    setUser({ ...userData, token: newToken });
+    setUser({ ...family, token: newToken });
+    // Store refresh token for later use
+    try {
+      await import('expo-secure-store').then(m =>
+        m.setItemAsync('legacy_odyssey_refresh', session.refresh_token)
+      );
+    } catch (e) { /* ignore */ }
     return res.data;
   }, []);
 

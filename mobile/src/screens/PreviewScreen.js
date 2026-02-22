@@ -8,16 +8,37 @@ import {
 import { WebView } from 'react-native-webview';
 import { colors, spacing, typography } from '../theme';
 import { BASE_URL } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 
 export default function PreviewScreen({ route }) {
-  const { slug } = route.params || {};
+  const { slug, bookPassword, familyId } = route.params || {};
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   // Construct the book URL - the web book is served from the API host
-  const bookUrl = slug
-    ? `${BASE_URL}/book/${slug}`
+  // Use the family's subdomain from user context if available
+  const effectiveSlug = slug || user?.subdomain;
+  const bookUrl = effectiveSlug
+    ? `${BASE_URL}/book/${effectiveSlug}`
     : `${BASE_URL}/book`;
+
+  // If we know the book password and family ID, inject it as a cookie
+  // so the WebView doesn't show the password prompt
+  const injectedJS = bookPassword && familyId
+    ? `
+      // Auto-submit the password form if it appears
+      (function() {
+        const form = document.querySelector('form');
+        const input = document.querySelector('input[type="password"]');
+        if (form && input) {
+          input.value = '${bookPassword.replace(/'/g, "\\'")}';
+          form.submit();
+        }
+      })();
+      true;
+    `
+    : 'true;';
 
   return (
     <View style={styles.container}>
@@ -39,6 +60,7 @@ export default function PreviewScreen({ route }) {
       <WebView
         source={{ uri: bookUrl }}
         style={styles.webview}
+        injectedJavaScript={injectedJS}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
         onError={() => {
@@ -53,6 +75,7 @@ export default function PreviewScreen({ route }) {
         javaScriptEnabled
         domStorageEnabled
         allowsInlineMediaPlayback
+        sharedCookiesEnabled
       />
     </View>
   );

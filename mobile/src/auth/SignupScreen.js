@@ -16,17 +16,35 @@ import { useAuth } from './AuthContext';
 export default function SignupScreen({ navigation }) {
   const { signup } = useAuth();
   const [displayName, setDisplayName] = useState('');
+  const [subdomain, setSubdomain] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Auto-generate subdomain suggestion from display name
+  function handleDisplayNameChange(text) {
+    setDisplayName(text);
+    if (!subdomain || subdomain === generateSubdomain(displayName)) {
+      setSubdomain(generateSubdomain(text));
+    }
+  }
+
+  function generateSubdomain(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 30);
+  }
+
   async function handleSignup() {
     setError('');
 
     if (!displayName.trim()) {
       setError('Please enter your display name.');
+      return;
+    }
+    const cleanSubdomain = subdomain.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!cleanSubdomain || cleanSubdomain.length < 3) {
+      setError('Please enter a site name (at least 3 characters, letters and numbers only).');
       return;
     }
     if (!email.trim()) {
@@ -48,7 +66,7 @@ export default function SignupScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await signup(email.trim(), password, displayName.trim());
+      await signup(email.trim(), password, cleanSubdomain, displayName.trim());
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
     } finally {
@@ -84,13 +102,28 @@ export default function SignupScreen({ navigation }) {
           <Text style={styles.label}>Display Name</Text>
           <TextInput
             style={styles.input}
-            placeholder="Your name"
+            placeholder="Your name or family name"
             placeholderTextColor={colors.placeholder}
             value={displayName}
-            onChangeText={setDisplayName}
+            onChangeText={handleDisplayNameChange}
             autoCapitalize="words"
             editable={!loading}
           />
+
+          <Text style={styles.label}>Site Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. smithfamily"
+            placeholderTextColor={colors.placeholder}
+            value={subdomain}
+            onChangeText={(text) => setSubdomain(text.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+          />
+          <Text style={styles.subdomainHint}>
+            Your book will be at {subdomain || 'yourname'}.legacyodyssey.com
+          </Text>
 
           <Text style={styles.label}>Email</Text>
           <TextInput
@@ -216,6 +249,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     fontSize: typography.sizes.md,
     color: colors.textPrimary,
+  },
+  subdomainHint: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: spacing.xs,
   },
   button: {
     backgroundColor: colors.gold,
