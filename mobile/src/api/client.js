@@ -7,7 +7,7 @@ const TOKEN_KEY = 'legacy_odyssey_token';
 const BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   process.env.API_URL ||
-  'https://legacy-odyssey-production.up.railway.app';
+  'https://legacy-odyssey-production-a9d1.up.railway.app';
 
 const client = axios.create({
   baseURL: BASE_URL,
