@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= book.child_first_name %> <%= book.child_last_name %> — A Legacy Odyssey Baby Book</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/book.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <%- include('../book/sidebar', { book, family }) %>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <%- include('../book/welcome', { book, imageUrl }) %>
+      <%- include('../book/before', { beforeCards, checklist, imageUrl }) %>
+      <%- include('../book/birth', { book, birthStory, imageUrl }) %>
+      <%- include('../book/home', { comingHomeCards, imageUrl }) %>
+      <%- include('../book/months', { months, imageUrl }) %>
+      <%- include('../book/family', { familyMembers, imageUrl }) %>
+      <%- include('../book/firsts', { firsts }) %>
+      <%- include('../book/holidays', { celebrations, imageUrl }) %>
+      <%- include('../book/letters', { book, letters }) %>
+      <%- include('../book/recipes', { recipes, imageUrl }) %>
+      <%- include('../book/vault', { book, vaultItems }) %>
+    </div>
+  </div>
+
+  <!-- Inject data for client-side JS (modals, etc.) -->
+  <script>
+    const months = <%- JSON.stringify((months || []).map(m => ({
+      num: m.month_number,
+      label: m.label,
+      highlight: m.highlight,
+      weight: m.weight,
+      length: m.length,
+      photo: m.photo_path ? imageUrl(m.photo_path) : null,
+      note: m.note
+    }))) %>;
+
+    const familyMembers = <%- JSON.stringify(
+      Object.fromEntries((familyMembers || []).map(fm => [fm.member_key, {
+        name: fm.name,
+        relation: fm.relation,
+        emoji: fm.emoji,
+        photo: fm.photo_path ? imageUrl(fm.photo_path) : null,
+        meta: [
+          { label: fm.meta_1_label, value: fm.meta_1_value },
+          { label: fm.meta_2_label, value: fm.meta_2_value },
+          { label: fm.meta_3_label, value: fm.meta_3_value },
+          { label: fm.meta_4_label, value: fm.meta_4_value },
+        ].filter(m => m.label),
+        story: fm.story,
+        story2: fm.story2,
+        quote: { text: fm.quote_text, cite: fm.quote_cite },
+        photos: [
+          { img: fm.album_1_path ? imageUrl(fm.album_1_path) : null, caption: fm.album_1_caption },
+          { img: fm.album_2_path ? imageUrl(fm.album_2_path) : null, caption: fm.album_2_caption },
+          { img: fm.album_3_path ? imageUrl(fm.album_3_path) : null, caption: fm.album_3_caption },
+        ].filter(p => p.img || p.caption)
+      }]))
+    ) %>;
+
+    // Birth date for vault countdown
+    window.birthDate = '<%= book.birth_date || '' %>';
+  </script>
+  <script src="/js/book.js"></script>
+</body>
+</html>

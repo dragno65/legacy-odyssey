@@ -1,0 +1,71 @@
+<!-- Mobile Header -->
+<header class="mobile-header">
+  <span class="mobile-logo"><%= book.child_first_name %>'s Book</span>
+  <button class="hamburger" onclick="toggleNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- Nav Overlay -->
+<div class="nav-overlay" id="navOverlay" onclick="toggleNav()"></div>
+
+<!-- Sidebar Navigation -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">&#10022; Legacy Odyssey</div>
+    <div class="sidebar-child-name"><%= book.child_first_name %> <%= book.child_last_name %></div>
+    <div class="sidebar-tagline">Born &middot; <%= book.birth_date ? new Date(book.birth_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '' %> &middot; <%= book.city || '' %></div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">The Book</div>
+    <a class="nav-item active" onclick="showPage('welcome')">
+      <span class="nav-icon">&#127775;</span>
+      <span class="nav-label">Welcome</span>
+    </a>
+    <a class="nav-item" onclick="showPage('before')">
+      <span class="nav-icon">&#129328;</span>
+      <span class="nav-label">Before You Arrived</span>
+    </a>
+    <a class="nav-item" onclick="showPage('birth')">
+      <span class="nav-icon">&#127800;</span>
+      <span class="nav-label">Birth Story</span>
+    </a>
+    <a class="nav-item" onclick="showPage('home')">
+      <span class="nav-icon">&#127968;</span>
+      <span class="nav-label">Coming Home</span>
+    </a>
+    <a class="nav-item" onclick="showPage('months')">
+      <span class="nav-icon">&#128197;</span>
+      <span class="nav-label">Month by Month</span>
+    </a>
+    <div class="nav-section-label">Family &amp; Memories</div>
+    <a class="nav-item" onclick="showPage('family')">
+      <span class="nav-icon">&#128106;</span>
+      <span class="nav-label">Our Family</span>
+    </a>
+    <a class="nav-item" onclick="showPage('firsts')">
+      <span class="nav-icon">&#11088;</span>
+      <span class="nav-label">Your Firsts</span>
+    </a>
+    <a class="nav-item" onclick="showPage('holidays')">
+      <span class="nav-icon">&#127881;</span>
+      <span class="nav-label">Celebrations</span>
+    </a>
+    <a class="nav-item" onclick="showPage('letters')">
+      <span class="nav-icon">&#128140;</span>
+      <span class="nav-label">Letters To You</span>
+    </a>
+    <a class="nav-item" onclick="showPage('recipes')">
+      <span class="nav-icon">&#127858;</span>
+      <span class="nav-label">Family Recipes</span>
+    </a>
+    <div class="nav-section-label">The Vault</div>
+    <a class="nav-item locked" onclick="showPage('vault')">
+      <span class="nav-icon">&#128274;</span>
+      <span class="nav-label">Locked Until 18</span>
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <p>Crafted with love by<br><span>Legacy Odyssey</span><br>legacyodyssey.com</p>
+  </div>
+</nav>

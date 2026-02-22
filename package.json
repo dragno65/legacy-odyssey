@@ -1,0 +1,28 @@
+{
+  "name": "legacy-odyssey",
+  "version": "1.0.0",
+  "description": "Legacy Odyssey - Premium digital baby book platform",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node scripts/seed-demo.js"
+  },
+  "keywords": [],
+  "author": "Legacy Odyssey",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "stripe": "^20.3.1"
+  }
+}

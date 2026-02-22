@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Detail - Legacy Odyssey</title>
+</head>
+<body>
+  <div id="family-detail">
+    <h1>Family Detail</h1>
+    <form action="/admin/family" method="POST">
+      <div>
+        <label for="familyName">Family Name</label>
+        <input type="text" id="familyName" name="familyName" required>
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <button type="submit">Save</button>
+    </form>
+    <a href="/admin/dashboard">Back to Dashboard</a>
+  </div>
+</body>
+</html>

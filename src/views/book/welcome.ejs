@@ -1,0 +1,46 @@
+<section id="page-welcome" class="page-section active">
+  <div class="welcome-hero">
+    <div class="welcome-photo-half">
+      <% if (book.hero_image_path) { %>
+        <img src="<%= imageUrl(book.hero_image_path) %>" alt="<%= book.child_first_name %>" loading="lazy">
+      <% } %>
+      <div class="welcome-photo-overlay"></div>
+    </div>
+    <div class="welcome-text-half">
+      <div class="welcome-eyebrow">&#10022; Welcome to the Book of</div>
+      <h1 class="welcome-name"><em><%= book.child_first_name %></em><br><%= book.child_last_name %></h1>
+      <p class="welcome-meaning">"A name chosen with love, meaning, and intention"</p>
+      <div class="welcome-divider"></div>
+      <div class="vital-stats">
+        <div class="stat-item">
+          <div class="stat-label">Born</div>
+          <div class="stat-value"><%= book.birth_date ? new Date(book.birth_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '' %></div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Time</div>
+          <div class="stat-value"><%= book.birth_time || '' %></div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Weight</div>
+          <div class="stat-value"><%= book.birth_weight_lbs ? book.birth_weight_lbs + ' lbs ' + (book.birth_weight_oz || 0) + ' oz' : '' %></div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Length</div>
+          <div class="stat-value"><%= book.birth_length_inches ? book.birth_length_inches + ' inches' : '' %></div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Born In</div>
+          <div class="stat-value"><%= book.birth_city || '' %><%= book.birth_state ? ', ' + book.birth_state : '' %></div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Hospital</div>
+          <div class="stat-value"><%= book.birth_hospital || '' %></div>
+        </div>
+      </div>
+      <blockquote class="welcome-quote">
+        "From the moment we first saw your face, our world was never the same. This is your story &mdash; every moment, every milestone, every memory &mdash; written just for you."
+        <cite>&mdash; Mom &amp; Dad</cite>
+      </blockquote>
+    </div>
+  </div>
+</section>

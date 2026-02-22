@@ -1,0 +1,78 @@
+const { supabaseAdmin } = require('../config/supabase');
+
+async function resolveFamily(req, res, next) {
+  const host = req.hostname;
+  const appDomain = process.env.APP_DOMAIN || 'legacyodyssey.com';
+
+  let family = null;
+
+  // 1. Check custom domain (not our app domain or its subdomains)
+  if (!host.endsWith(`.${appDomain}`) && host !== appDomain && host !== `www.${appDomain}`) {
+    const { data } = await supabaseAdmin
+      .from('families')
+      .select('*')
+      .eq('custom_domain', host)
+      .eq('is_active', true)
+      .single();
+    family = data;
+  }
+
+  // 2. Check subdomain
+  if (!family && host.endsWith(`.${appDomain}`)) {
+    const subdomain = host.replace(`.${appDomain}`, '');
+    if (subdomain && subdomain !== 'www' && subdomain !== 'app' && subdomain !== 'admin') {
+      const { data } = await supabaseAdmin
+        .from('families')
+        .select('*')
+        .eq('subdomain', subdomain)
+        .eq('is_active', true)
+        .single();
+      family = data;
+    }
+  }
+
+  // 3. Path-based fallback for development: /book/:slug
+  if (!family && req.path.startsWith('/book/')) {
+    const slug = req.path.split('/')[2];
+    if (slug) {
+      const { data } = await supabaseAdmin
+        .from('families')
+        .select('*')
+        .eq('subdomain', slug)
+        .eq('is_active', true)
+        .single();
+      family = data;
+      if (family) {
+        // Rewrite the path so downstream routes see /
+        req.bookSlug = slug;
+      }
+    }
+  }
+
+  // 4. Local dev fallback: use demo family when no match on localhost
+  if (!family && (host === 'localhost' || host === '127.0.0.1') && process.env.NODE_ENV !== 'production') {
+    const { data } = await supabaseAdmin
+      .from('families')
+      .select('*')
+      .eq('subdomain', 'demo')
+      .eq('is_active', true)
+      .single();
+    family = data;
+  }
+
+  if (!family) {
+    req.isMarketingSite = true;
+    return next();
+  }
+
+  // Check subscription status
+  const blocked = ['canceled', 'unpaid'];
+  if (blocked.includes(family.subscription_status)) {
+    return res.status(403).render('book/expired', { family });
+  }
+
+  req.family = family;
+  next();
+}
+
+module.exports = resolveFamily;

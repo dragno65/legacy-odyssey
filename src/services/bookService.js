@@ -1,0 +1,192 @@
+const { supabaseAdmin } = require('../config/supabase');
+const seedData = require('../utils/seedData');
+
+// --- Read operations ---
+
+async function getBookByFamilyId(familyId) {
+  const { data } = await supabaseAdmin
+    .from('books')
+    .select('*')
+    .eq('family_id', familyId)
+    .single();
+  return data;
+}
+
+async function getFullBook(familyId) {
+  const book = await getBookByFamilyId(familyId);
+  if (!book) return null;
+
+  const [
+    { data: beforeCards },
+    { data: checklist },
+    { data: birthStory },
+    { data: comingHomeCards },
+    { data: months },
+    { data: familyMembers },
+    { data: firsts },
+    { data: celebrations },
+    { data: letters },
+    { data: recipes },
+    { data: vaultItems },
+  ] = await Promise.all([
+    supabaseAdmin.from('before_arrived_cards').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('before_arrived_checklist').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('birth_stories').select('*').eq('book_id', book.id).maybeSingle(),
+    supabaseAdmin.from('coming_home_cards').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('months').select('*').eq('book_id', book.id).order('month_number'),
+    supabaseAdmin.from('family_members').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('firsts').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('celebrations').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('letters').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('recipes').select('*').eq('book_id', book.id).order('sort_order'),
+    supabaseAdmin.from('vault_items').select('*').eq('book_id', book.id).order('created_at'),
+  ]);
+
+  return {
+    book,
+    beforeCards: beforeCards || [],
+    checklist: checklist || [],
+    birthStory: birthStory || {},
+    comingHomeCards: comingHomeCards || [],
+    months: months || [],
+    familyMembers: familyMembers || [],
+    firsts: firsts || [],
+    celebrations: celebrations || [],
+    letters: letters || [],
+    recipes: recipes || [],
+    vaultItems: vaultItems || [],
+  };
+}
+
+// --- Write operations ---
+
+async function updateBook(bookId, fields) {
+  const { data, error } = await supabaseAdmin
+    .from('books')
+    .update(fields)
+    .eq('id', bookId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function upsertMonth(bookId, monthNumber, fields) {
+  const { data, error } = await supabaseAdmin
+    .from('months')
+    .upsert({ book_id: bookId, month_number: monthNumber, ...fields }, { onConflict: 'book_id,month_number' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function upsertFamilyMember(bookId, memberKey, fields) {
+  const { data, error } = await supabaseAdmin
+    .from('family_members')
+    .upsert({ book_id: bookId, member_key: memberKey, ...fields }, { onConflict: 'book_id,member_key' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function upsertBirthStory(bookId, fields) {
+  // Check if exists
+  const { data: existing } = await supabaseAdmin
+    .from('birth_stories')
+    .select('id')
+    .eq('book_id', bookId)
+    .maybeSingle();
+
+  if (existing) {
+    const { data, error } = await supabaseAdmin
+      .from('birth_stories')
+      .update(fields)
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabaseAdmin
+      .from('birth_stories')
+      .insert({ book_id: bookId, ...fields })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+async function updateSectionCards(table, bookId, cards) {
+  // Delete existing, insert new
+  await supabaseAdmin.from(table).delete().eq('book_id', bookId);
+  if (cards.length > 0) {
+    const rows = cards.map((card, i) => ({ book_id: bookId, sort_order: i, ...card }));
+    const { data, error } = await supabaseAdmin.from(table).insert(rows).select();
+    if (error) throw error;
+    return data;
+  }
+  return [];
+}
+
+// --- Seed a new book with default content ---
+
+async function createBookWithDefaults(familyId) {
+  // Create the book
+  const { data: book, error: bookError } = await supabaseAdmin
+    .from('books')
+    .insert({
+      family_id: familyId,
+      child_first_name: "Your Child's",
+      child_last_name: 'Name',
+      parent_quote: 'From the moment we first saw your face, our world was never the same. This is your story — every moment, every milestone, every memory — written just for you.',
+      parent_quote_attribution: 'Mom & Dad',
+    })
+    .select()
+    .single();
+  if (bookError) throw bookError;
+
+  // Seed all default content in parallel
+  await Promise.all([
+    supabaseAdmin.from('before_arrived_cards').insert(
+      seedData.defaultBeforeCards.map((c) => ({ book_id: book.id, ...c }))
+    ),
+    supabaseAdmin.from('coming_home_cards').insert(
+      seedData.defaultComingHomeCards.map((c) => ({ book_id: book.id, ...c }))
+    ),
+    supabaseAdmin.from('months').insert(
+      seedData.defaultMonths.map((m) => ({ book_id: book.id, ...m }))
+    ),
+    supabaseAdmin.from('family_members').insert(
+      seedData.defaultFamilyMembers.map((fm) => ({ book_id: book.id, ...fm }))
+    ),
+    supabaseAdmin.from('firsts').insert(
+      seedData.defaultFirsts.map((f) => ({ book_id: book.id, ...f }))
+    ),
+    supabaseAdmin.from('celebrations').insert(
+      seedData.defaultCelebrations.map((c) => ({ book_id: book.id, ...c }))
+    ),
+    supabaseAdmin.from('letters').insert(
+      seedData.defaultLetters.map((l) => ({ book_id: book.id, ...l }))
+    ),
+    supabaseAdmin.from('recipes').insert(
+      seedData.defaultRecipes.map((r) => ({ book_id: book.id, ...r }))
+    ),
+    supabaseAdmin.from('birth_stories').insert({ book_id: book.id, first_held_by: 'Mom / Dad' }),
+  ]);
+
+  return book;
+}
+
+module.exports = {
+  getBookByFamilyId,
+  getFullBook,
+  updateBook,
+  upsertMonth,
+  upsertFamilyMember,
+  upsertBirthStory,
+  updateSectionCards,
+  createBookWithDefaults,
+};

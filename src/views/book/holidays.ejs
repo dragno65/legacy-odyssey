@@ -1,0 +1,23 @@
+<section id="page-holidays" class="page-section">
+  <div class="page-header">
+    <div class="page-header-eyebrow">Chapter Seven</div>
+    <h2 class="page-header-title"><em>Celebrations</em> &amp; Traditions</h2>
+    <p class="page-header-sub">The holidays, cultural traditions, and family rituals that will mark every year of your life.</p>
+  </div>
+  <div class="holidays-list">
+    <% (celebrations || []).forEach((c, i) => { %>
+      <div class="holiday-card<%= i % 2 === 1 ? ' reverse' : '' %>">
+        <div class="holiday-photo">
+          <% if (c.photo_path) { %>
+            <img src="<%= imageUrl(c.photo_path) %>" alt="<%= c.title %>" loading="lazy">
+          <% } %>
+        </div>
+        <div class="holiday-body">
+          <div class="holiday-eyebrow"><%= c.eyebrow || '' %></div>
+          <h3 class="holiday-title"><%= c.title %></h3>
+          <p class="holiday-text"><%- (c.body || '').replace(/\n/g, '<br>') %></p>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+</section>

@@ -1,0 +1,17 @@
+<section id="page-letters" class="page-section">
+  <div class="page-header">
+    <div class="page-header-eyebrow">Chapter Eight</div>
+    <h2 class="page-header-title">Letters <em>To You</em></h2>
+    <p class="page-header-sub">Words written across time, sealed with love, waiting for the day you're ready to read them.</p>
+  </div>
+  <div class="letters-container">
+    <% (letters || []).forEach(l => { %>
+      <div class="letter-card">
+        <div class="letter-from">&#10022; <%= l.from_label %></div>
+        <div class="letter-salutation"><%= l.salutation %></div>
+        <p class="letter-body"><%- (l.body || '').replace(/\n/g, '<br>') %></p>
+        <div class="letter-signature"><%- (l.signature || '').replace(/\n/g, '<br>') %></div>
+      </div>
+    <% }); %>
+  </div>
+</section>

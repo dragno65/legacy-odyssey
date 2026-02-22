@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.pem
+.DS_Store
+mobile/node_modules/
+mobile/.expo/

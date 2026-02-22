@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legacy Odyssey - Sign Up</title>
+</head>
+<body>
+  <div id="marketing-signup">
+    <h1>Legacy Odyssey</h1>
+    <p>Create a lasting keepsake for your family.</p>
+    <form action="/signup" method="POST">
+      <div>
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div>
+        <label for="plan">Plan</label>
+        <select id="plan" name="plan">
+          <option value="basic">Basic</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      <button type="submit">Sign Up</button>
+    </form>
+  </div>
+</body>
+</html>
