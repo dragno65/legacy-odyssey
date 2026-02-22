@@ -12,7 +12,23 @@ router.get('/mine', async (req, res, next) => {
   try {
     const book = await bookService.getBookByFamilyId(req.family.id);
     if (!book) return res.status(404).json({ error: 'No book found' });
-    res.json(book);
+
+    // Build a child object so the mobile app can read it as book.child
+    const child = {
+      first_name: book.child_first_name || '',
+      last_name: book.child_last_name || '',
+      birth_date: book.birth_date || '',
+      birth_time: book.birth_time || '',
+      weight_lbs: book.birth_weight_lbs || '',
+      weight_oz: book.birth_weight_oz || '',
+      length_inches: book.birth_length_inches || '',
+      city: book.birth_city || '',
+      state: book.birth_state || '',
+      hospital: book.birth_hospital || '',
+      name_meaning: book.name_meaning || '',
+    };
+
+    res.json({ ...book, child });
   } catch (err) {
     next(err);
   }
@@ -35,6 +51,31 @@ router.put('/mine', async (req, res, next) => {
     const book = await bookService.getBookByFamilyId(req.family.id);
     if (!book) return res.status(404).json({ error: 'No book found' });
 
+    const updates = {};
+
+    // Support the mobile app's { child: { first_name, ... } } format
+    const child = req.body.child;
+    if (child && typeof child === 'object') {
+      // Map mobile field names to database column names
+      const childMap = {
+        first_name: 'child_first_name',
+        last_name: 'child_last_name',
+        birth_date: 'birth_date',
+        birth_time: 'birth_time',
+        weight_lbs: 'birth_weight_lbs',
+        weight_oz: 'birth_weight_oz',
+        length_inches: 'birth_length_inches',
+        city: 'birth_city',
+        state: 'birth_state',
+        hospital: 'birth_hospital',
+        name_meaning: 'name_meaning',
+      };
+      for (const [mobileKey, dbKey] of Object.entries(childMap)) {
+        if (child[mobileKey] !== undefined) updates[dbKey] = child[mobileKey];
+      }
+    }
+
+    // Also support direct DB column names (for future web dashboard, etc.)
     const allowed = [
       'child_first_name', 'child_last_name', 'birth_date', 'birth_time',
       'birth_weight_lbs', 'birth_weight_oz', 'birth_length_inches',
@@ -42,9 +83,12 @@ router.put('/mine', async (req, res, next) => {
       'hero_image_path', 'parent_quote', 'parent_quote_attribution',
       'vault_unlock_date',
     ];
-    const updates = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.json(book); // Nothing to update, return existing book
     }
 
     const updated = await bookService.updateBook(book.id, updates);
