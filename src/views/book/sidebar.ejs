@@ -13,7 +13,7 @@
 <nav id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">&#10022; Legacy Odyssey</div>
-    <div class="sidebar-child-name"><%= book.child_first_name %> <%= book.child_last_name %></div>
+    <div class="sidebar-child-name"><%= book.child_first_name %><%= book.child_middle_name ? ' ' + book.child_middle_name : '' %> <%= book.child_last_name %></div>
     <div class="sidebar-tagline">Born &middot; <%= book.birth_date ? new Date(book.birth_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '' %> &middot; <%= book.city || '' %></div>
   </div>
   <div class="sidebar-nav">

@@ -21,6 +21,7 @@ export default function ChildInfoScreen({ navigation }) {
 
   // Form fields
   const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
@@ -39,6 +40,7 @@ export default function ChildInfoScreen({ navigation }) {
         const book = res.data;
         const child = book.child || book.childInfo || {};
         setFirstName(child.first_name || child.firstName || '');
+        setMiddleName(child.middle_name || child.middleName || '');
         setLastName(child.last_name || child.lastName || '');
         setBirthDate(child.birth_date || child.birthDate || '');
         setBirthTime(child.birth_time || child.birthTime || '');
@@ -65,6 +67,7 @@ export default function ChildInfoScreen({ navigation }) {
       await put('/api/books/mine', {
         child: {
           first_name: firstName.trim(),
+          middle_name: middleName.trim(),
           last_name: lastName.trim(),
           birth_date: birthDate.trim(),
           birth_time: birthTime.trim(),
@@ -114,23 +117,33 @@ export default function ChildInfoScreen({ navigation }) {
         ) : null}
 
         <View style={styles.row}>
-          <View style={styles.halfField}>
+          <View style={styles.thirdField}>
             <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
               value={firstName}
               onChangeText={setFirstName}
-              placeholder="First name"
+              placeholder="First"
               placeholderTextColor={colors.placeholder}
             />
           </View>
-          <View style={styles.halfField}>
+          <View style={styles.thirdField}>
+            <Text style={styles.label}>Middle Name</Text>
+            <TextInput
+              style={styles.input}
+              value={middleName}
+              onChangeText={setMiddleName}
+              placeholder="Middle"
+              placeholderTextColor={colors.placeholder}
+            />
+          </View>
+          <View style={styles.thirdField}>
             <Text style={styles.label}>Last Name</Text>
             <TextInput
               style={styles.input}
               value={lastName}
               onChangeText={setLastName}
-              placeholder="Last name"
+              placeholder="Last"
               placeholderTextColor={colors.placeholder}
             />
           </View>

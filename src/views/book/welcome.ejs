@@ -8,7 +8,7 @@
     </div>
     <div class="welcome-text-half">
       <div class="welcome-eyebrow">&#10022; Welcome to the Book of</div>
-      <h1 class="welcome-name"><em><%= book.child_first_name %></em><br><%= book.child_last_name %></h1>
+      <h1 class="welcome-name"><em><%= book.child_first_name %></em><% if (book.child_middle_name) { %> <em><%= book.child_middle_name %></em><% } %><br><%= book.child_last_name %></h1>
       <p class="welcome-meaning">"A name chosen with love, meaning, and intention"</p>
       <div class="welcome-divider"></div>
       <div class="vital-stats">

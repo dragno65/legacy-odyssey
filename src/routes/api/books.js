@@ -16,6 +16,7 @@ router.get('/mine', async (req, res, next) => {
     // Build a child object so the mobile app can read it as book.child
     const child = {
       first_name: book.child_first_name || '',
+      middle_name: book.child_middle_name || '',
       last_name: book.child_last_name || '',
       birth_date: book.birth_date || '',
       birth_time: book.birth_time || '',
@@ -59,6 +60,7 @@ router.put('/mine', async (req, res, next) => {
       // Map mobile field names → database column names
       const childMap = {
         first_name: 'child_first_name',
+        middle_name: 'child_middle_name',
         last_name: 'child_last_name',
         birth_date: 'birth_date',
         birth_time: 'birth_time',
@@ -77,7 +79,7 @@ router.put('/mine', async (req, res, next) => {
 
     // Also support direct DB column names (for future web dashboard, etc.)
     const allowed = [
-      'child_first_name', 'child_last_name', 'birth_date', 'birth_time',
+      'child_first_name', 'child_middle_name', 'child_last_name', 'birth_date', 'birth_time',
       'birth_weight_lbs', 'birth_weight_oz', 'birth_length_inches',
       'birth_city', 'birth_state', 'birth_hospital', 'name_meaning',
       'hero_image_path', 'parent_quote', 'parent_quote_attribution',

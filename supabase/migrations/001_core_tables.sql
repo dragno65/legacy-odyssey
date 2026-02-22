@@ -36,8 +36,9 @@ CREATE INDEX idx_families_stripe_customer ON families(stripe_customer_id);
 CREATE TABLE books (
   id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   family_id               UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
-  child_first_name        TEXT NOT NULL DEFAULT 'Your Child''s',
-  child_last_name         TEXT NOT NULL DEFAULT 'Name',
+  child_first_name        TEXT NOT NULL DEFAULT '',
+  child_middle_name       TEXT DEFAULT '',
+  child_last_name         TEXT NOT NULL DEFAULT '',
   birth_date              DATE,
   birth_time              TIME,
   birth_weight_lbs        INTEGER,
