@@ -19,6 +19,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleLogin() {
     setError('');
@@ -76,15 +77,24 @@ export default function LoginScreen({ navigation }) {
           />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor={colors.placeholder}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Enter your password"
+              placeholderTextColor={colors.placeholder}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -197,6 +207,30 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     fontSize: typography.sizes.md,
     color: colors.textPrimary,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: spacing.md,
+    fontSize: typography.sizes.md,
+    color: colors.textPrimary,
+  },
+  eyeButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    justifyContent: 'center',
+  },
+  eyeIcon: {
+    fontSize: typography.sizes.sm,
+    color: colors.gold,
+    fontWeight: typography.weights.semibold,
   },
   button: {
     backgroundColor: colors.gold,
