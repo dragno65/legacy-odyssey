@@ -4,3 +4,9 @@ node_modules/
 .DS_Store
 mobile/node_modules/
 mobile/.expo/
+
+# Temp files
+nul
+save_html.py
+screen-reference.html
+reference/
