@@ -52,8 +52,14 @@ router.get('/stripe/success', async (req, res) => {
   res.redirect('/');
 });
 
-// GET / — Main book route
-router.get('/', resolveFamily, requireBookPassword, async (req, res, next) => {
+// GET / — Main book route (or marketing landing page)
+router.get('/', resolveFamily, (req, res, next) => {
+  // If no family found, show the marketing landing page
+  if (req.isMarketingSite) {
+    return res.render('marketing/landing');
+  }
+  next();
+}, requireBookPassword, async (req, res, next) => {
   try {
     const data = await bookService.getFullBook(req.family.id);
     if (!data) return res.status(404).render('book/not-found');
