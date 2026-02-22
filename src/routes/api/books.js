@@ -87,6 +87,18 @@ router.put('/mine', async (req, res, next) => {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
 
+    // Sanitize: convert empty strings to null for typed DB columns
+    // (Postgres rejects "" for DATE, TIME, INTEGER, NUMERIC columns)
+    const typedColumns = [
+      'birth_date', 'birth_time', 'birth_weight_lbs', 'birth_weight_oz',
+      'birth_length_inches', 'vault_unlock_date',
+    ];
+    for (const col of typedColumns) {
+      if (col in updates && (updates[col] === '' || updates[col] === undefined)) {
+        updates[col] = null;
+      }
+    }
+
     if (Object.keys(updates).length === 0) {
       return res.json(book); // Nothing to update, return existing book
     }

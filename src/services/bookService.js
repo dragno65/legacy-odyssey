@@ -139,8 +139,8 @@ async function createBookWithDefaults(familyId) {
     .from('books')
     .insert({
       family_id: familyId,
-      child_first_name: "Your Child's",
-      child_last_name: 'Name',
+      child_first_name: '',
+      child_last_name: '',
       parent_quote: 'From the moment we first saw your face, our world was never the same. This is your story — every moment, every milestone, every memory — written just for you.',
       parent_quote_attribution: 'Mom & Dad',
     })
