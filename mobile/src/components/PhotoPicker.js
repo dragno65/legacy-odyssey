@@ -88,9 +88,10 @@ export default function PhotoPicker({ currentPhoto, onPhotoSelected }) {
         },
       });
 
-      const path = res.data.path || res.data.url || res.data.storagePath;
-      if (path) {
-        onPhotoSelected(path);
+      // Prefer the full public URL (from Supabase Storage) over the raw storage path
+      const photoUrl = res.data.url || res.data.path || res.data.storagePath;
+      if (photoUrl) {
+        onPhotoSelected(photoUrl);
       }
     } catch (err) {
       Alert.alert('Upload Failed', err.message || 'Could not upload photo.');
