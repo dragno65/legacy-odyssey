@@ -63,7 +63,7 @@ export default function LettersScreen({ navigation }) {
     setSaving(true);
     setError('');
     try {
-      await put('/api/books/mine/letters', { letters });
+      await put('/api/books/mine/letters', { items: letters });
       Alert.alert('Saved', 'Letters updated successfully.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);

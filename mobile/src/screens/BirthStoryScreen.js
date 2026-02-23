@@ -23,10 +23,10 @@ export default function BirthStoryScreen({ navigation }) {
   const [firstHeldBy, setFirstHeldBy] = useState('');
   const [momNarrative, setMomNarrative] = useState('');
   const [dadNarrative, setDadNarrative] = useState('');
-  const [photo1, setPhoto1] = useState('');
-  const [photo2, setPhoto2] = useState('');
-  const [photo3, setPhoto3] = useState('');
-  const [photo4, setPhoto4] = useState('');
+  const [momPhoto1, setMomPhoto1] = useState('');
+  const [momPhoto2, setMomPhoto2] = useState('');
+  const [dadPhoto1, setDadPhoto1] = useState('');
+  const [dadPhoto2, setDadPhoto2] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -36,10 +36,10 @@ export default function BirthStoryScreen({ navigation }) {
         setFirstHeldBy(d.first_held_by || '');
         setMomNarrative(d.mom_narrative || '');
         setDadNarrative(d.dad_narrative || '');
-        setPhoto1(d.photo_1_path || '');
-        setPhoto2(d.photo_2_path || '');
-        setPhoto3(d.photo_3_path || '');
-        setPhoto4(d.photo_4_path || '');
+        setMomPhoto1(d.mom_photo_1 || '');
+        setMomPhoto2(d.mom_photo_2 || '');
+        setDadPhoto1(d.dad_photo_1 || '');
+        setDadPhoto2(d.dad_photo_2 || '');
       } catch (err) {
         if (err.status !== 404) {
           setError(err.message || 'Failed to load birth story.');
@@ -59,10 +59,10 @@ export default function BirthStoryScreen({ navigation }) {
         first_held_by: firstHeldBy.trim(),
         mom_narrative: momNarrative.trim(),
         dad_narrative: dadNarrative.trim(),
-        photo_1_path: photo1,
-        photo_2_path: photo2,
-        photo_3_path: photo3,
-        photo_4_path: photo4,
+        mom_photo_1: momPhoto1,
+        mom_photo_2: momPhoto2,
+        dad_photo_1: dadPhoto1,
+        dad_photo_2: dadPhoto2,
       });
       Alert.alert('Saved', 'Birth story updated.', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -122,8 +122,10 @@ export default function BirthStoryScreen({ navigation }) {
             numberOfLines={10}
             textAlignVertical="top"
           />
-          <Text style={styles.photoLabel}>Mom's Photo</Text>
-          <PhotoPicker currentPhoto={photo1} onPhotoSelected={setPhoto1} />
+          <Text style={styles.photoLabel}>Mom's Photo 1</Text>
+          <PhotoPicker currentPhoto={momPhoto1} onPhotoSelected={setMomPhoto1} />
+          <Text style={styles.photoLabel}>Mom's Photo 2</Text>
+          <PhotoPicker currentPhoto={momPhoto2} onPhotoSelected={setMomPhoto2} />
         </View>
 
         <View style={styles.section}>
@@ -138,16 +140,10 @@ export default function BirthStoryScreen({ navigation }) {
             numberOfLines={10}
             textAlignVertical="top"
           />
-          <Text style={styles.photoLabel}>Dad's Photo</Text>
-          <PhotoPicker currentPhoto={photo2} onPhotoSelected={setPhoto2} />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Additional Photos</Text>
-          <Text style={styles.photoLabel}>Photo 3</Text>
-          <PhotoPicker currentPhoto={photo3} onPhotoSelected={setPhoto3} />
-          <Text style={styles.photoLabel}>Photo 4</Text>
-          <PhotoPicker currentPhoto={photo4} onPhotoSelected={setPhoto4} />
+          <Text style={styles.photoLabel}>Dad's Photo 1</Text>
+          <PhotoPicker currentPhoto={dadPhoto1} onPhotoSelected={setDadPhoto1} />
+          <Text style={styles.photoLabel}>Dad's Photo 2</Text>
+          <PhotoPicker currentPhoto={dadPhoto2} onPhotoSelected={setDadPhoto2} />
         </View>
 
         <TouchableOpacity

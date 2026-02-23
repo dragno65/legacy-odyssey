@@ -183,13 +183,28 @@ router.put('/mine/coming-home', async (req, res, next) => {
   }
 });
 
-// PUT /api/books/mine/months/:num
+// GET/PUT /api/books/mine/months
 router.get('/mine/months', async (req, res, next) => {
   try {
     const book = await bookService.getBookByFamilyId(req.family.id);
     const { supabaseAdmin } = require('../../config/supabase');
     const { data } = await supabaseAdmin.from('months').select('*').eq('book_id', book.id).order('month_number');
     res.json(data || []);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/books/mine/months/:num — Get a single month
+router.get('/mine/months/:num', async (req, res, next) => {
+  try {
+    const book = await bookService.getBookByFamilyId(req.family.id);
+    const num = parseInt(req.params.num);
+    if (num < 1 || num > 12) return res.status(400).json({ error: 'Month must be 1-12' });
+    const { supabaseAdmin } = require('../../config/supabase');
+    const { data } = await supabaseAdmin.from('months').select('*').eq('book_id', book.id).eq('month_number', num).maybeSingle();
+    if (!data) return res.status(404).json({ error: 'Month not found' });
+    res.json(data);
   } catch (err) {
     next(err);
   }

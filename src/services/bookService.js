@@ -72,9 +72,16 @@ async function updateBook(bookId, fields) {
 }
 
 async function upsertMonth(bookId, monthNumber, fields) {
+  // Whitelist allowed fields to prevent DB errors from unknown columns
+  const allowed = ['label', 'highlight', 'weight', 'length', 'photo_path', 'note'];
+  const safe = {};
+  for (const key of allowed) {
+    if (fields[key] !== undefined) safe[key] = fields[key];
+  }
+
   const { data, error } = await supabaseAdmin
     .from('months')
-    .upsert({ book_id: bookId, month_number: monthNumber, ...fields }, { onConflict: 'book_id,month_number' })
+    .upsert({ book_id: bookId, month_number: monthNumber, ...safe }, { onConflict: 'book_id,month_number' })
     .select()
     .single();
   if (error) throw error;
@@ -92,6 +99,13 @@ async function upsertFamilyMember(bookId, memberKey, fields) {
 }
 
 async function upsertBirthStory(bookId, fields) {
+  // Whitelist allowed fields to prevent DB errors from unknown columns
+  const allowed = ['first_held_by', 'mom_narrative', 'dad_narrative', 'mom_photo_1', 'mom_photo_2', 'dad_photo_1', 'dad_photo_2'];
+  const safe = {};
+  for (const key of allowed) {
+    if (fields[key] !== undefined) safe[key] = fields[key];
+  }
+
   // Check if exists
   const { data: existing } = await supabaseAdmin
     .from('birth_stories')
@@ -102,7 +116,7 @@ async function upsertBirthStory(bookId, fields) {
   if (existing) {
     const { data, error } = await supabaseAdmin
       .from('birth_stories')
-      .update(fields)
+      .update(safe)
       .eq('id', existing.id)
       .select()
       .single();
@@ -111,7 +125,7 @@ async function upsertBirthStory(bookId, fields) {
   } else {
     const { data, error } = await supabaseAdmin
       .from('birth_stories')
-      .insert({ book_id: bookId, ...fields })
+      .insert({ book_id: bookId, ...safe })
       .select()
       .single();
     if (error) throw error;

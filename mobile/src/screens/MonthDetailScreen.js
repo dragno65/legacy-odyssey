@@ -32,11 +32,11 @@ export default function MonthDetailScreen({ route, navigation }) {
       try {
         const res = await get(`/api/books/mine/months/${monthNum}`);
         const data = res.data || {};
-        setHighlight(data.highlight || data.title || '');
+        setHighlight(data.highlight || '');
         setWeight(String(data.weight || ''));
         setLength(String(data.length || ''));
-        setNote(data.note || data.notes || '');
-        setPhotoPath(data.photo || data.photo_path || '');
+        setNote(data.note || '');
+        setPhotoPath(data.photo_path || '');
       } catch (err) {
         // Month data may not exist yet - that's OK
         if (err.status !== 404) {
@@ -54,12 +54,11 @@ export default function MonthDetailScreen({ route, navigation }) {
     setError('');
     try {
       await put(`/api/books/mine/months/${monthNum}`, {
-        month: monthNum,
         highlight: highlight.trim(),
-        weight: weight ? Number(weight) : null,
-        length: length ? Number(length) : null,
+        weight: weight.trim() || null,
+        length: length.trim() || null,
         note: note.trim(),
-        photo: photoPath,
+        photo_path: photoPath,
       });
       Alert.alert('Saved', `Month ${monthLabel} updated successfully.`, [
         { text: 'OK', onPress: () => navigation.goBack() },
