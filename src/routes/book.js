@@ -8,10 +8,24 @@ const router = Router();
 
 // POST /verify-password
 router.post('/verify-password', resolveFamily, async (req, res) => {
+  // If resolveFamily couldn't find the family (e.g. Railway URL, not a subdomain),
+  // fall back to looking up by slug from the hidden form field
+  if (!req.family && req.body.slug) {
+    const { supabaseAdmin } = require('../config/supabase');
+    const { data } = await supabaseAdmin
+      .from('families')
+      .select('*')
+      .eq('subdomain', req.body.slug)
+      .eq('is_active', true)
+      .single();
+    if (data) req.family = data;
+  }
+
   if (!req.family) return res.status(404).render('book/not-found');
 
   const { password } = req.body;
-  if (password && password.toLowerCase() === req.family.book_password.toLowerCase()) {
+  if (password && req.family.book_password &&
+      password.toLowerCase() === req.family.book_password.toLowerCase()) {
     const cookieName = `book_${req.family.id}`;
     const hash = hashPassword(req.family.book_password, req.family.id);
     res.cookie(cookieName, hash, {
@@ -20,7 +34,9 @@ router.post('/verify-password', resolveFamily, async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       sameSite: 'lax',
     });
-    return res.redirect('/');
+    // Redirect back to the book page (use slug path so it works on any domain)
+    const slug = req.body.slug || req.family.subdomain;
+    return res.redirect(`/book/${slug}`);
   }
 
   res.render('book/password', { family: req.family, error: true });
