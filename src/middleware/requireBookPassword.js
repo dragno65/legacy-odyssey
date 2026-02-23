@@ -17,6 +17,15 @@ function requireBookPassword(req, res, next) {
     return next();
   }
 
+  // Allow password bypass for mobile app preview via /book/:slug on Railway URL
+  // (The Railway URL is only used by the mobile app; public legacyodyssey.com still enforces passwords)
+  const host = req.hostname.toLowerCase();
+  const isRailway = host.endsWith('.up.railway.app') ||
+    host === (process.env.RAILWAY_PUBLIC_DOMAIN || '').toLowerCase();
+  if (isRailway && req.path.startsWith('/book/')) {
+    return next();
+  }
+
   // Check for valid mobile app preview token in query string
   // (allows authenticated app users to bypass the password page)
   if (req.query.app_token) {

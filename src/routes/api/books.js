@@ -29,7 +29,31 @@ router.get('/mine', async (req, res, next) => {
       name_meaning: book.name_meaning || '',
     };
 
-    res.json({ ...book, child });
+    // Include months so MonthsScreen can display them
+    // (MonthsScreen checks m.month and m.number, so alias month_number)
+    const { supabaseAdmin } = require('../../config/supabase');
+    const { data: monthsData } = await supabaseAdmin
+      .from('months').select('*').eq('book_id', book.id).order('month_number');
+    const months = (monthsData || []).map(m => ({
+      ...m, month: m.month_number, number: m.month_number,
+    }));
+
+    // Include family data for SettingsScreen (password, slug)
+    const { data: family } = await supabaseAdmin
+      .from('families').select('book_password, subdomain, custom_domain')
+      .eq('id', req.family.id).single();
+
+    res.json({
+      ...book,
+      child,
+      months,
+      // Aliases for SettingsScreen which reads book.password / book.slug
+      password: family?.book_password || '',
+      book_password: family?.book_password || '',
+      slug: family?.subdomain || '',
+      family_slug: family?.subdomain || '',
+      subdomain: family?.subdomain || '',
+    });
   } catch (err) {
     next(err);
   }
@@ -101,11 +125,24 @@ router.put('/mine', async (req, res, next) => {
       }
     }
 
-    if (Object.keys(updates).length === 0) {
+    // Handle password field from SettingsScreen
+    // (SettingsScreen sends { password } to this endpoint instead of /mine/settings)
+    const passwordValue = req.body.password || req.body.book_password;
+    if (passwordValue !== undefined) {
+      const { supabaseAdmin } = require('../../config/supabase');
+      await supabaseAdmin.from('families')
+        .update({ book_password: passwordValue })
+        .eq('id', req.family.id);
+    }
+
+    if (Object.keys(updates).length === 0 && passwordValue === undefined) {
       return res.json(book); // Nothing to update, return existing book
     }
 
-    const updated = await bookService.updateBook(book.id, updates);
+    let updated = book;
+    if (Object.keys(updates).length > 0) {
+      updated = await bookService.updateBook(book.id, updates);
+    }
     res.json(updated);
   } catch (err) {
     next(err);

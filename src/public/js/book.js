@@ -201,6 +201,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
   startCountdown();
 
+  // ===== IMAGE LIGHTBOX =====
+  window.openLightbox = function(src, alt) {
+    const lightbox = document.getElementById('bookLightbox');
+    const img = document.getElementById('lightboxImg');
+    if (!lightbox || !img) return;
+    img.src = src;
+    img.alt = alt || '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeLightbox = function() {
+    const lightbox = document.getElementById('bookLightbox');
+    if (lightbox) {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  };
+
+  // Close lightbox on background click
+  const lightboxEl = document.getElementById('bookLightbox');
+  if (lightboxEl) {
+    lightboxEl.addEventListener('click', function(e) {
+      if (e.target === this) closeLightbox();
+    });
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  // Event delegation: click any book image to open lightbox
+  // (Excludes month-photo and family-photo which have their own card click handlers)
+  document.addEventListener('click', function(e) {
+    const img = e.target;
+    if (img.tagName !== 'IMG') return;
+
+    const isBookImage = img.closest(
+      '.before-card-photo, .perspective-photo, .month-modal-photo, ' +
+      '.holiday-photo, .recipe-photo, .fdetail-photo-item'
+    );
+
+    if (isBookImage && img.src && img.src !== window.location.href) {
+      e.stopPropagation();
+      openLightbox(img.src, img.alt);
+    }
+  });
+
   // Show welcome page by default
   const welcomePage = document.getElementById('page-welcome');
   if (welcomePage) welcomePage.classList.add('active');

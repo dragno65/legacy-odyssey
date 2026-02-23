@@ -66,6 +66,12 @@
     // Birth date for vault countdown
     window.birthDate = '<%= book.birth_date || '' %>';
   </script>
+  <!-- Image Lightbox -->
+  <div class="book-lightbox" id="bookLightbox">
+    <button class="book-lightbox-close" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" src="" alt="Full size image">
+  </div>
+
   <script src="/js/book.js"></script>
 </body>
 </html>
