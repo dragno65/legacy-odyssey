@@ -79,13 +79,35 @@ async function upsertMonth(bookId, monthNumber, fields) {
     if (fields[key] !== undefined) safe[key] = fields[key];
   }
 
-  const { data, error } = await supabaseAdmin
+  // Check if month row exists (months are seeded at book creation)
+  const { data: existing } = await supabaseAdmin
     .from('months')
-    .upsert({ book_id: bookId, month_number: monthNumber, ...safe }, { onConflict: 'book_id,month_number' })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+    .select('id')
+    .eq('book_id', bookId)
+    .eq('month_number', monthNumber)
+    .maybeSingle();
+
+  if (existing) {
+    // Update existing row (avoids NOT NULL constraint issues with upsert)
+    const { data, error } = await supabaseAdmin
+      .from('months')
+      .update(safe)
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    // Insert new row with default label if not provided
+    if (!safe.label) safe.label = 'Month ' + monthNumber;
+    const { data, error } = await supabaseAdmin
+      .from('months')
+      .insert({ book_id: bookId, month_number: monthNumber, ...safe })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 }
 
 async function upsertFamilyMember(bookId, memberKey, fields) {
@@ -156,7 +178,7 @@ async function createBookWithDefaults(familyId) {
       child_first_name: '',
       child_middle_name: '',
       child_last_name: '',
-      parent_quote: 'From the moment we first saw your face, our world was never the same. This is your story — every moment, every milestone, every memory — written just for you.',
+      parent_quote: 'From the moment we first saw your face, our world was never the same. This is your story \u2014 every moment, every milestone, every memory \u2014 written just for you.',
       parent_quote_attribution: 'Mom & Dad',
     })
     .select()
