@@ -156,10 +156,45 @@ async function upsertBirthStory(bookId, fields) {
 }
 
 async function updateSectionCards(table, bookId, cards) {
-  // Delete existing, insert new
+  // NOT NULL defaults for each table (PostgreSQL rejects NULL but allows empty string)
+  const NOT_NULL_DEFAULTS = {
+    before_arrived_cards: { title: '(untitled)' },
+    coming_home_cards: { title: '(untitled)' },
+    firsts: { title: '(untitled)', emoji: '\u2B50' },
+    celebrations: { title: '(untitled)' },
+    letters: { from_label: '(anonymous)' },
+    recipes: { title: '(untitled)' },
+    before_arrived_checklist: { label: '(item)' },
+  };
+
+  const defaults = NOT_NULL_DEFAULTS[table] || {};
+
+  // Filter out completely empty cards (no meaningful user content)
+  const meaningful = cards.filter((card) => {
+    const { photo_path, sort_order, book_id, id, created_at, updated_at, ...fields } = card;
+    return Object.values(fields).some((v) => v !== undefined && v !== null && v !== '' && v !== false);
+  });
+
+  // Apply NOT NULL defaults for required fields
+  const cleaned = meaningful.map((card) => {
+    const row = { ...card };
+    for (const [key, defaultVal] of Object.entries(defaults)) {
+      if (row[key] === undefined || row[key] === null || (typeof row[key] === 'string' && !row[key].trim())) {
+        row[key] = defaultVal;
+      }
+    }
+    // Strip any fields that Supabase won't recognize (e.g., 'id' from client)
+    delete row.id;
+    delete row.created_at;
+    delete row.updated_at;
+    delete row.book_id;
+    return row;
+  });
+
+  // Delete existing, then insert new
   await supabaseAdmin.from(table).delete().eq('book_id', bookId);
-  if (cards.length > 0) {
-    const rows = cards.map((card, i) => ({ book_id: bookId, sort_order: i, ...card }));
+  if (cleaned.length > 0) {
+    const rows = cleaned.map((card, i) => ({ book_id: bookId, sort_order: i, ...card }));
     const { data, error } = await supabaseAdmin.from(table).insert(rows).select();
     if (error) throw error;
     return data;
