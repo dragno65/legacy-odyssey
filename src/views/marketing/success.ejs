@@ -3,14 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Success - Legacy Odyssey</title>
+  <title>Welcome to Legacy Odyssey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Jost', sans-serif; background: #faf7f2; color: #2c2416; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .success-card { max-width: 520px; margin: 2rem; padding: 3rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; }
+    .success-icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .subtitle { color: #8a7e6b; margin-bottom: 2rem; }
+    .credentials { background: #faf7f2; border: 1px solid #e0d5c4; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; text-align: left; }
+    .credentials h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; margin-bottom: 0.75rem; color: #c8a96e; }
+    .cred-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #e0d5c4; }
+    .cred-row:last-child { border-bottom: none; }
+    .cred-label { color: #8a7e6b; font-size: 0.9rem; }
+    .cred-value { font-weight: 500; font-size: 0.9rem; word-break: break-all; }
+    .warning { font-size: 0.85rem; color: #c0392b; margin-top: 0.75rem; }
+    .btn { display: inline-block; margin-top: 1.5rem; padding: 0.85rem 2rem; background: #c8a96e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; transition: background 0.2s; }
+    .btn:hover { background: #b08e4a; }
+    .book-url { margin-top: 1rem; font-size: 0.9rem; color: #8a7e6b; }
+    .book-url a { color: #c8a96e; }
+  </style>
 </head>
 <body>
-  <div id="stripe-success">
-    <h1>Payment Successful</h1>
-    <p>Thank you for signing up for Legacy Odyssey!</p>
-    <p>Your account has been created. You can now start building your family book.</p>
-    <a href="/book">Go to Your Book</a>
+  <div class="success-card">
+    <div class="success-icon">&#10024;</div>
+    <h1>Your Book Is Ready</h1>
+    <p class="subtitle">Welcome to Legacy Odyssey! Your family's story starts now.</p>
+    <div class="credentials">
+      <h3>Your Account Details</h3>
+      <div class="cred-row">
+        <span class="cred-label">Book URL</span>
+        <span class="cred-value"><a href="https://<%= appDomain %>/book/<%= subdomain %>">https://<%= appDomain %>/book/<%= subdomain %></a></span>
+      </div>
+      <div class="cred-row">
+        <span class="cred-label">Temporary Password</span>
+        <span class="cred-value"><%= tempPassword %></span>
+      </div>
+      <p class="warning">Save this password! You'll need it to log in to the mobile app and change it.</p>
+    </div>
+    <a class="btn" href="https://<%= appDomain %>/book/<%= subdomain %>">View Your Book</a>
+    <p class="book-url">Download the <strong>Legacy Odyssey</strong> app to start adding your story.</p>
   </div>
 </body>
 </html>
