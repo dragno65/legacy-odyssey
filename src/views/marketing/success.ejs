@@ -19,6 +19,10 @@
     .cred-label { color: #8a7e6b; font-size: 0.9rem; }
     .cred-value { font-weight: 500; font-size: 0.9rem; word-break: break-all; }
     .warning { font-size: 0.85rem; color: #c0392b; margin-top: 0.75rem; }
+    .domain-setup { background: #f0f7f1; border: 1px solid #a8c5ab; border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; text-align: left; }
+    .domain-setup h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; margin-bottom: 0.5rem; color: #7a9e7e; }
+    .domain-setup p { font-size: 0.9rem; color: #4a3f32; line-height: 1.5; }
+    .domain-setup .domain-name { font-weight: 600; color: #2c2416; }
     .btn { display: inline-block; margin-top: 1.5rem; padding: 0.85rem 2rem; background: #c8a96e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; transition: background 0.2s; }
     .btn:hover { background: #b08e4a; }
     .book-url { margin-top: 1rem; font-size: 0.9rem; color: #8a7e6b; }
@@ -30,12 +34,29 @@
     <div class="success-icon">&#10024;</div>
     <h1>Your Book Is Ready</h1>
     <p class="subtitle">Welcome to Legacy Odyssey! Your family's story starts now.</p>
+
+    <% if (domain) { %>
+    <div class="domain-setup">
+      <h3>&#127760; Your Domain</h3>
+      <p>
+        <span class="domain-name">www.<%= domain %></span> is being set up.
+        This typically takes 5&ndash;30 minutes. We'll have it pointing to your book automatically.
+      </p>
+    </div>
+    <% } %>
+
     <div class="credentials">
       <h3>Your Account Details</h3>
       <div class="cred-row">
-        <span class="cred-label">Book URL</span>
+        <span class="cred-label">Book URL (available now)</span>
         <span class="cred-value"><a href="https://<%= appDomain %>/book/<%= subdomain %>">https://<%= appDomain %>/book/<%= subdomain %></a></span>
       </div>
+      <% if (domain) { %>
+      <div class="cred-row">
+        <span class="cred-label">Custom Domain (coming soon)</span>
+        <span class="cred-value">www.<%= domain %></span>
+      </div>
+      <% } %>
       <div class="cred-row">
         <span class="cred-label">Temporary Password</span>
         <span class="cred-value"><%= tempPassword %></span>

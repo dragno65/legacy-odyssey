@@ -58,6 +58,7 @@ router.get('/stripe/success', async (req, res) => {
       const appDomain = process.env.APP_DOMAIN || 'legacyodyssey.com';
       return res.render('marketing/success', {
         subdomain: result.family.subdomain,
+        domain: result.domain || null,
         appDomain,
         tempPassword: result.tempPassword,
       });

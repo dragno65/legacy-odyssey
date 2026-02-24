@@ -7,15 +7,22 @@ const router = Router();
 // POST /api/stripe/create-checkout
 router.post('/create-checkout', async (req, res, next) => {
   try {
-    const { email, subdomain } = req.body;
-    if (!email || !subdomain) {
-      return res.status(400).json({ error: 'email and subdomain are required' });
+    const { email, domain, subdomain: legacySubdomain } = req.body;
+
+    // Support both new domain flow and legacy subdomain flow
+    const subdomain = domain
+      ? domain.split('.')[0].toLowerCase().replace(/[^a-z0-9-]/g, '')
+      : legacySubdomain;
+
+    if (!email || (!domain && !subdomain)) {
+      return res.status(400).json({ error: 'email and domain (or subdomain) are required' });
     }
 
     const appDomain = process.env.APP_DOMAIN || 'legacyodyssey.com';
     const session = await stripeService.createCheckoutSession({
       email,
       subdomain,
+      domain: domain || null,
       successUrl: `https://${appDomain}/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `https://${appDomain}/pricing`,
     });

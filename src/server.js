@@ -55,6 +55,14 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/', authLimiter);
 
+// Rate limiting on domain search
+const domainSearchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: { error: 'Too many domain searches, please wait a moment' },
+});
+app.use('/api/domains/search', domainSearchLimiter);
+
 // --- Routes ---
 
 // Health check
@@ -67,6 +75,7 @@ app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/books', require('./routes/api/books'));
 app.use('/api', require('./routes/api/upload'));
 app.use('/api/stripe', require('./routes/api/stripe'));
+app.use('/api/domains', require('./routes/api/domains'));
 
 // Web routes (SSR — book viewing)
 app.use('/', require('./routes/book'));

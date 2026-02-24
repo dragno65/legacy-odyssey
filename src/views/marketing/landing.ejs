@@ -127,39 +127,59 @@
     </div>
   </section>
 
-  <!-- ====== DOMAIN SHOWCASE ====== -->
-  <section class="domain-showcase">
-    <h2 class="section-title">Claim Your Family's Domain</h2>
+  <!-- ====== DOMAIN SEARCH ====== -->
+  <section class="domain-showcase" id="domain-search">
+    <h2 class="section-title">Find Your Family's Domain</h2>
     <p class="section-subtitle">
       Domain names are one-of-a-kind. There's only one <strong>www.SmithFamily.com</strong>.
-      <br>Once someone registers it, it's gone. Claim yours today.
+      <br>Search now to see if yours is available.
     </p>
-    <div class="domain-examples">
-      <div class="domain-example fade-up">
-        <div class="domain-url">www.EowynHopeRagno.com</div>
-        <div class="domain-label">Baby book &mdash; full name</div>
+
+    <div class="domain-search-box">
+      <div class="domain-search-input-wrap">
+        <span class="domain-search-prefix">www.</span>
+        <input type="text" id="domainSearchInput" class="domain-search-input" placeholder="YourFamilyName" autocomplete="off" spellcheck="false">
+        <span class="domain-search-suffix">.com</span>
       </div>
-      <div class="domain-example fade-up">
-        <div class="domain-url">www.TheSmithFamily.com</div>
-        <div class="domain-label">Family photo album</div>
+      <button type="button" id="domainSearchBtn" class="btn-primary domain-search-btn">Search</button>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="domainSearchLoading" class="domain-search-loading" style="display:none;">
+      <div class="domain-spinner"></div>
+      <span>Checking availability&hellip;</span>
+    </div>
+
+    <!-- Results -->
+    <div id="domainResults" class="domain-results" style="display:none;"></div>
+
+    <!-- Alternatives -->
+    <div id="domainAlternatives" class="domain-alternatives" style="display:none;">
+      <h3 class="alternatives-title">Try one of these instead</h3>
+      <div id="domainAlternativesList" class="domain-results"></div>
+    </div>
+
+    <!-- Selected domain summary -->
+    <div id="domainSelected" class="domain-selected" style="display:none;">
+      <div class="domain-selected-check">&#10003;</div>
+      <div class="domain-selected-info">
+        <div class="domain-selected-label">Your domain</div>
+        <div class="domain-selected-name" id="selectedDomainName"></div>
       </div>
-      <div class="domain-example fade-up">
-        <div class="domain-url">www.BabyOliviaJames.com</div>
-        <div class="domain-label">Baby book &mdash; first &amp; middle</div>
-      </div>
-      <div class="domain-example fade-up">
-        <div class="domain-url">www.RagnoKids.com</div>
-        <div class="domain-label">Multi-child family site</div>
-      </div>
-      <div class="domain-example fade-up">
-        <div class="domain-url">www.LittleLunaRose.com</div>
-        <div class="domain-label">Baby book &mdash; nickname</div>
-      </div>
-      <div class="domain-example fade-up">
-        <div class="domain-url">www.JohnsonFamilyAlbum.com</div>
-        <div class="domain-label">Family photo album</div>
+      <button type="button" id="domainChangeBtn" class="btn-text">Change</button>
+    </div>
+
+    <!-- Domain examples (shown before search) -->
+    <div id="domainExamples" class="domain-examples-section">
+      <p class="domain-examples-label">Ideas to get you started:</p>
+      <div class="domain-example-chips">
+        <span class="domain-chip" data-name="EowynHopeRagno">EowynHopeRagno.com</span>
+        <span class="domain-chip" data-name="TheSmithFamily">TheSmithFamily.com</span>
+        <span class="domain-chip" data-name="BabyOliviaJames">BabyOliviaJames.com</span>
+        <span class="domain-chip" data-name="LittleLunaRose">LittleLunaRose.com</span>
       </div>
     </div>
+
     <p class="domain-urgency fade-up">
       Every day, thousands of domain names are registered. Don't let someone else take yours.
     </p>
@@ -385,6 +405,7 @@
     // Set initial state
     monthlyLabel.classList.add('active');
   </script>
+  <script src="/js/domain-search.js"></script>
 
 </body>
 </html>
