@@ -6,6 +6,8 @@
 
 Legacy Odyssey is a **subscription SaaS baby book platform**. Parents use a **React Native mobile app** to fill in their baby's story (milestones, photos, recipes, letters, etc.), and family/friends view the finished book through a **web book viewer** at a custom domain (e.g., `eowynhoperagno.com`).
 
+**Key differentiator:** Users get a **real custom domain** (e.g., `www.janedoe.com`) purchased automatically via Spaceship API during checkout. The domain cost is bundled into the subscription price.
+
 ### Architecture
 
 ```
@@ -19,6 +21,11 @@ Supabase (PostgreSQL DB + Storage)
         │
         ▼
 EJS Web Book Viewer (served by Express)
+        │
+        ▼
+Spaceship API (domain purchase + DNS)
+Railway API (custom domain hookup)
+Stripe (subscription payments)
 ```
 
 ---
@@ -29,7 +36,9 @@ EJS Web Book Viewer (served by Express)
 legacy-odyssey/
 ├── src/                        # Express API server
 │   ├── server.js               # Entry point (Express app setup)
-│   ├── config/                 # DB client, Supabase config
+│   ├── config/                 # DB client, Supabase, Stripe, Spaceship configs
+│   │   ├── spaceship.js        # Spaceship API axios instance (NEW)
+│   │   └── env.js              # Env var validation with optional warnings
 │   ├── middleware/              # Auth, error handling, family resolution
 │   │   ├── requireAuth.js      # JWT Bearer token auth
 │   │   ├── requireAdmin.js     # Admin-only middleware
@@ -41,44 +50,66 @@ legacy-odyssey/
 │   │   │   ├── auth.js         # Sign up, login, JWT issuance
 │   │   │   ├── books.js        # CRUD for all book content (sections, photos, etc.)
 │   │   │   ├── upload.js       # Photo upload to Supabase Storage
-│   │   │   └── stripe.js       # Subscription management
+│   │   │   ├── stripe.js       # Subscription management + domain in checkout
+│   │   │   └── domains.js      # GET /api/domains/search?name=janedoe (NEW)
 │   │   ├── book.js             # Web book viewer routes (password gate, book pages)
 │   │   ├── admin.js            # Admin panel routes
 │   │   └── webhooks.js         # Stripe webhook handler
 │   ├── services/               # Business logic layer
+│   │   ├── spaceshipService.js # Spaceship API: availability, registration, DNS (NEW)
+│   │   ├── domainService.js    # Domain search orchestration + alternatives (NEW)
+│   │   ├── railwayService.js   # Railway GraphQL: add custom domains (NEW)
+│   │   ├── stripeService.js    # Stripe checkout + domain purchase on success (MODIFIED)
+│   │   ├── familyService.js    # Family CRUD
+│   │   └── bookService.js      # Book content CRUD
 │   ├── utils/                  # Helpers
 │   ├── views/                  # EJS templates
 │   │   ├── book/               # Web book viewer pages (welcome, birth, months, etc.)
 │   │   ├── layouts/            # Shared EJS layouts
 │   │   ├── admin/              # Admin panel pages
-│   │   └── marketing/          # Landing pages
+│   │   └── marketing/          # Landing + success pages (domain search widget)
 │   └── public/                 # Static assets (CSS, JS, images)
+│       ├── css/marketing.css   # Includes domain search styles (MODIFIED)
+│       └── js/domain-search.js # Client-side domain search UI (NEW)
 │
 ├── mobile/                     # React Native app (Expo)
 │   ├── App.js                  # Root: AuthProvider + NavigationContainer
-│   ├── app.json                # Expo config
-│   ├── eas.json                # EAS Build config
-│   ├── package.json            # Expo 54, React 19.1, React Navigation 7
-│   └── src/
-│       ├── api/
-│       │   └── client.js       # Axios client, SecureStore token, base URL config
-│       ├── auth/
-│       │   ├── AuthContext.js   # React Context for auth state
-│       │   ├── LoginScreen.js  # Login UI
-│       │   └── SignupScreen.js # Sign up UI
-│       ├── screens/            # All app screens (listed below)
-│       ├── components/
-│       │   ├── PhotoPicker.js  # Image picker + upload component
-│       │   └── LoadingOverlay.js
-│       └── theme/
-│           └── index.js        # Colors, spacing, typography, shadows
+│   └── src/                    # (see Mobile App Screens section below)
 │
-├── package.json                # Server dependencies
+├── supabase/
+│   └── migrations/
+│       ├── 001_core_tables.sql # Core tables (families, content, etc.)
+│       └── 002_domain_orders.sql # Domain purchase tracking (NEW - NEEDS MIGRATION)
+│
+├── package.json                # Server dependencies (includes axios)
 ├── .env                        # Server env vars (not committed)
 ├── .env.example                # Template for env vars
 ├── app-screen-reference.html   # Visual annotated screenshots of all app pages
 └── CLAUDE_CONTEXT.md           # This file
 ```
+
+---
+
+## Domain Purchase Flow (NEW)
+
+The core user flow for domain acquisition:
+
+1. **Landing page** (`landing.ejs`) — User types desired domain name (e.g., "janedoe")
+2. **Domain search** (`/api/domains/search`) — Checks availability across .com, .family, .baby, .love, .life, .me via Spaceship bulk API
+3. **Smart alternatives** — If taken, suggests variations (prefixes: the/little/baby/our, suffixes: family/book/story, middle names, different TLDs)
+4. **$20/yr price cap** — Domains over $20/year are filtered out server-side
+5. **Stripe checkout** — Domain selection passed as metadata in checkout session
+6. **Async purchase** — After Stripe success, fire-and-forget: register domain → poll status → setup DNS → add to Railway → update family record
+7. **Immediate access** — User gets book at slug URL immediately; custom domain activates in 5-30 minutes
+
+### Key Services:
+- **spaceshipService.js** — Spaceship REST API wrapper (check availability, bulk check, register domain, poll async ops, setup DNS)
+- **domainService.js** — Orchestration layer (search, suggest alternatives, purchase & setup flow)
+- **railwayService.js** — Railway GraphQL API (add custom domain to service)
+- **stripeService.js** — Modified to accept domain in checkout, create domain_orders row, trigger async purchase
+
+### Database:
+- **domain_orders** table tracks lifecycle: pending → registering → registered → dns_setup → active → failed
 
 ---
 
@@ -185,52 +216,63 @@ EXPO_PUBLIC_API_URL || API_URL || 'https://legacy-odyssey-production-a9d1.up.rai
 | Service | URL / ID |
 |---------|----------|
 | **Railway** (API server) | `legacy-odyssey-production-a9d1.up.railway.app` |
-| **Railway CNAME** | `tdt5meaj.up.railway.app` |
+| **Railway Project ID** | `25a7cbc7-64da-4012-bf24-5b20a0bc4839` |
+| **Railway Service ID** | `a759cd1b-34ae-4171-8e4b-9259e0e95dda` |
+| **Railway Environment ID** | `067fb530-0dcf-4289-9a48-ee0438fa56b2` |
 | **Supabase project** | `vesaydfwwdbbajydbzmq` |
 | **GitHub repo** | `github.com/dragno6565-ship-it/legacy-odyssey` |
-| **GitHub (alt remote)** | `github.com/dragno65/legacy-odyssey` |
+| **GitHub (alt remote)** | `github.com/dragno65/legacy-odyssey` (push permission issue) |
 | **Domain** | `eowynhoperagno.com` / `legacyodyssey.com` |
 | **Book URL** | `legacyodyssey.com/book/eowynragno` |
 | **Book password** | `legacy` |
 | **Latest APK** | `expo.dev/accounts/dragno65/projects/legacy-odyssey/builds/d9bc9bb2-1f33-47e5-8de1-ede6c21c0d66` |
 
+### Third-Party API Credentials (configured in Railway env vars + local .env):
+| Service | Env Var | Status |
+|---------|---------|--------|
+| Spaceship API Key | `SPACESHIP_API_KEY` | ✅ Configured |
+| Spaceship API Secret | `SPACESHIP_API_SECRET` | ✅ Configured |
+| Spaceship Contact ID | `SPACESHIP_CONTACT_ID` | ✅ Created (Daniel Ragno, dragno6565@gmail.com) |
+| Railway API Token | `RAILWAY_API_TOKEN` | ✅ Configured |
+| Railway Service ID | `RAILWAY_SERVICE_ID` | ✅ Configured |
+| Railway Environment ID | `RAILWAY_ENVIRONMENT_ID` | ✅ Configured |
+| Railway CNAME Target | `RAILWAY_CNAME_TARGET` | ✅ Configured |
+| Stripe Keys | `STRIPE_SECRET_KEY` etc. | ❌ Not yet set up |
+
 ---
 
-## Deployment Plan (see plans/elegant-popping-pascal.md)
-
-Phases A-G covering: fix server bugs → Supabase setup → Railway deploy → Stripe setup → mobile app update → DNS config → E2E test.
-
-**Key bugs to fix:**
-- `src/server.js` — Mount webhooks.js route
-- `src/views/book/welcome.ejs` — Fix field names (birth_weight → birth_weight_lbs, etc.)
-- `src/views/book/birth.ejs` — Fix photo field names (mom_photo_path → mom_photo_1)
-- `src/views/marketing/success.ejs` — Render subdomain/tempPassword variables
-- `mobile/src/api/client.js` — Update default API URL to Railway
-
----
-
-## Current Status (Updated 2026-02-22)
+## Current Status (Updated 2026-02-24)
 
 ### What's Done:
 - Full mobile app built and functional (all 16 screens)
 - Express API server built with all routes
 - EJS web book viewer built
-- Supabase DB tables created
-- Railway deployment active
-- DNS configured (eowynhoperagno.com → Railway)
+- Supabase DB core tables created (001_core_tables.sql)
+- Railway deployment active and auto-deploying from GitHub
+- DNS configured (eowynhoperagno.com + legacyodyssey.com → Railway)
 - Visual screen reference system created (app-screen-reference.html)
 - APK built and available on Expo
-
-### What's In Progress:
-- **Going through the app page by page** with the user to fix all UI/UX issues
-- User is using the visual reference labels (1-a, 3-d, etc.) to point out what needs changing
+- **Server bugs fixed** (success.ejs rendering, all 5 bugs from deployment plan)
+- **Domain search & purchase feature built** (7 new files, 8 modified files)
+  - Interactive domain search on landing page
+  - Spaceship API integration (availability check, bulk check, registration, DNS)
+  - Smart alternative suggestions (prefixes, suffixes, middle names, extra TLDs)
+  - $20/year price cap enforcement
+  - Stripe checkout integration with domain metadata
+  - Async domain purchase orchestration (fire-and-forget after payment)
+  - Railway custom domain API integration
+- **Spaceship API credentials created** (API key, secret, contact ID)
+- **Railway API token created** and all env vars deployed
+- **spaceshipService.js fixed** to match real API response format (result field, bulk endpoint)
 
 ### What's Remaining:
-- Fix all UI/UX issues identified during page-by-page review
-- Fix server bugs listed in deployment plan (Phase A)
-- Set up Stripe account and webhook
-- Build final production APK
-- Full end-to-end test
+1. **Run Supabase migration** — `002_domain_orders.sql` needs to be run in SQL Editor
+2. **Fund Spaceship wallet** — prepaid balance needed for domain purchases (~$9-12/yr for .com)
+3. **Set up Stripe** — create account, get live keys, configure webhook
+4. **End-to-end domain test** — test full flow with a real domain once wallet is funded
+5. **Continue page-by-page UI/UX review** of the mobile app
+6. **Build final production APK**
+7. **Push to dragno65 remote** — permission issue needs resolving (Railway deploys from dragno6565-ship-it)
 
 ---
 
@@ -268,3 +310,7 @@ python -m http.server 9876
 4. **Expo Web for screenshots** — use `npx expo start --web --port 8082` with Chrome to view/screenshot the app. Set viewport to 430x932 for mobile simulation
 5. **Demo mode** — click "Browse Demo" on the login screen to bypass auth for local testing
 6. **The web book viewer is separate** from the mobile app — it's EJS templates served by Express at the book URL
+7. **Spaceship API rate limits** — 5 req/domain/300s for availability, 300 req/user/300s for contacts. We use bulk endpoint + in-memory caching (5-min TTL) to mitigate
+8. **Domain registration is async** — Spaceship returns 202 + operation ID, poll with /async-operations/{id}
+9. **The .env file has all credentials** — never commit it. Use .env.example as template
+10. **Railway auto-deploys** from `dragno6565-ship-it/legacy-odyssey` on push to main
