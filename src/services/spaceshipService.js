@@ -13,10 +13,12 @@ async function checkAvailability(domain) {
 
   try {
     const { data } = await spaceship.get(`/domains/${encodeURIComponent(domain)}/available`);
+    // API returns { domain, result: "available"|"taken", premiumPricing: [] }
+    const premium = data.premiumPricing?.[0];
     return {
       domain,
-      available: data.available === true,
-      price: data.price != null ? parseFloat(data.price) : null,
+      available: data.result === 'available',
+      price: premium?.price != null ? parseFloat(premium.price) : null,
     };
   } catch (err) {
     if (err.response?.status === 429) {
@@ -30,6 +32,7 @@ async function checkAvailability(domain) {
 
 /**
  * Check availability of a base name across multiple TLDs.
+ * Uses the bulk endpoint (POST /domains/available) for efficiency.
  * Filters out domains over the price cap.
  * Returns array of { domain, tld, available, price, underBudget }.
  */
@@ -37,25 +40,38 @@ async function checkMultipleTlds(baseName, tlds = PRIMARY_TLDS) {
   if (!spaceship) throw new Error('Spaceship API not configured');
 
   const domains = tlds.map((tld) => `${baseName}.${tld}`);
-  const results = await Promise.allSettled(
-    domains.map((d) => checkAvailability(d))
-  );
 
-  return results
-    .map((r, i) => {
+  try {
+    const { data } = await spaceship.post('/domains/available', { domains });
+    // API returns { domains: [{ domain, result, premiumPricing }] }
+    return (data.domains || []).map((item) => {
+      const tld = item.domain.split('.').slice(1).join('.');
+      const premium = item.premiumPricing?.[0];
+      const price = premium?.price != null ? parseFloat(premium.price) : null;
+      const underBudget = price != null ? price <= MAX_PRICE_YEARLY : true;
+      return {
+        domain: item.domain,
+        tld,
+        available: item.result === 'available',
+        price,
+        underBudget,
+      };
+    });
+  } catch (err) {
+    console.error(`Bulk availability check failed for ${baseName}:`, err.message);
+    // Fallback to individual checks
+    const results = await Promise.allSettled(
+      domains.map((d) => checkAvailability(d))
+    );
+    return results.map((r, i) => {
       if (r.status === 'rejected' || !r.value) {
         return { domain: domains[i], tld: tlds[i], available: false, price: null, underBudget: false };
       }
       const v = r.value;
-      const underBudget = v.price != null ? v.price <= MAX_PRICE_YEARLY : true; // assume under budget if price unknown
-      return {
-        domain: v.domain,
-        tld: tlds[i],
-        available: v.available,
-        price: v.price,
-        underBudget,
-      };
+      const underBudget = v.price != null ? v.price <= MAX_PRICE_YEARLY : true;
+      return { domain: v.domain, tld: tlds[i], available: v.available, price: v.price, underBudget };
     });
+  }
 }
 
 /**
