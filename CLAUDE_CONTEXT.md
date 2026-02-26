@@ -241,7 +241,7 @@ EXPO_PUBLIC_API_URL || API_URL || 'https://legacy-odyssey-production-a9d1.up.rai
 
 ---
 
-## Current Status (Updated 2026-02-24)
+## Current Status (Updated 2026-02-25)
 
 ### What's Done:
 - Full mobile app built and functional (all 16 screens)
@@ -264,15 +264,29 @@ EXPO_PUBLIC_API_URL || API_URL || 'https://legacy-odyssey-production-a9d1.up.rai
 - **Spaceship API credentials created** (API key, secret, contact ID)
 - **Railway API token created** and all env vars deployed
 - **spaceshipService.js fixed** to match real API response format (result field, bulk endpoint)
+- **Supabase migration 002_domain_orders.sql COMPLETED** — domain_orders table, 3 indexes, and update trigger created. Verified via REST API (HTTP 200).
+- **Spaceship wallet funded** — $50.00 balance (last top-up 2/25/2026). Visa ending 6181 on file. Auto-renewal enabled.
+- **Domain search works locally** — tested `npm run dev` locally, GET /api/domains/search?name=testbabybook123 returns all 6 TLDs as available (HTTP 200, ~1s response)
+
+### CRITICAL DEPLOYMENT ISSUE — Railway deploying old code:
+- **Root cause:** Railway is configured to deploy from `dragno65/legacy-odyssey` (GitHub), but all new code was pushed to `dragno6565-ship-it/legacy-odyssey` (the `origin` remote).
+- **The active Railway deployment is from commit `c7d712d`** ("Add lightbox JS for full-size image viewing on click") — this is BEFORE the domain search feature commits.
+- **Missing commits on dragno65 remote:** `385da5b` (Stripe success fix), `d38e66d` (domain feature), `375273c` (Spaceship API fix), `ae248ea` (context update)
+- **Cannot push to dragno65 remote** because git credentials on this machine are for `dragno6565-ship-it` (Permission denied error 403).
+- **Railway GitHub App only has access to `dragno65` repos**, not `dragno6565-ship-it`.
+- **FIX NEEDED:** Push code to `dragno65/legacy-odyssey` via one of:
+  - Option A: Run `git push dragno65 main` from a terminal authenticated as `dragno65`
+  - Option B: Use a Personal Access Token for `dragno65`: `git push https://<TOKEN>@github.com/dragno65/legacy-odyssey.git main`
+  - Option C: Add `dragno6565-ship-it` as a collaborator on `dragno65/legacy-odyssey` in GitHub Settings
+  - Option D: Install Railway GitHub App on the `dragno6565-ship-it` account (Railway Settings > Configure GitHub App)
+- **Railway source is reconnected:** After investigating, we disconnected and reconnected `dragno65/legacy-odyssey` as the source. Branch: main. Service is Online with old code.
 
 ### What's Remaining:
-1. **Run Supabase migration** — `002_domain_orders.sql` needs to be run in SQL Editor
-2. **Fund Spaceship wallet** — prepaid balance needed for domain purchases (~$9-12/yr for .com)
-3. **Set up Stripe** — create account, get live keys, configure webhook
-4. **End-to-end domain test** — test full flow with a real domain once wallet is funded
-5. **Continue page-by-page UI/UX review** of the mobile app
-6. **Build final production APK**
-7. **Push to dragno65 remote** — permission issue needs resolving (Railway deploys from dragno6565-ship-it)
+1. **⚠️ Push new code to `dragno65/legacy-odyssey`** — See deployment issue above. This is the BLOCKING issue.
+2. **Set up Stripe** — create account, get live keys, configure webhook
+3. **End-to-end domain test** — test full flow with a real domain once Railway has new code
+4. **Continue page-by-page UI/UX review** of the mobile app
+5. **Build final production APK**
 
 ---
 
@@ -313,4 +327,9 @@ python -m http.server 9876
 7. **Spaceship API rate limits** — 5 req/domain/300s for availability, 300 req/user/300s for contacts. We use bulk endpoint + in-memory caching (5-min TTL) to mitigate
 8. **Domain registration is async** — Spaceship returns 202 + operation ID, poll with /async-operations/{id}
 9. **The .env file has all credentials** — never commit it. Use .env.example as template
-10. **Railway auto-deploys** from `dragno6565-ship-it/legacy-odyssey` on push to main
+10. **Railway auto-deploys** from `dragno65/legacy-odyssey` (NOT `dragno6565-ship-it`!). The `origin` remote is `dragno6565-ship-it`, the `dragno65` remote is `dragno65`. Must push to `dragno65` remote for Railway to pick it up.
+11. **Spaceship wallet balance:** $50.00 as of 2/25/2026
+12. **Supabase migration 002 is done** — domain_orders table exists and is verified
+13. **Chrome extension disconnects frequently** — especially between different domains. Reconnect by logging in to same account in Claude Desktop and Chrome extension
+14. **Windows curl SSL fix** — Always use `--ssl-no-revoke` flag with curl on this Windows machine
+15. **Supabase project region:** us-west-2 (pooler: `aws-0-us-west-2.pooler.supabase.com:6543`)
