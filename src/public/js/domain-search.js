@@ -21,6 +21,7 @@
 
   // State
   let selectedDomain = null;
+  let pendingPlan = null;   // remembers plan choice if user picks plan before domain
 
   // --- Search ---
 
@@ -164,7 +165,15 @@
     resultsEl.style.display = 'none';
     alternativesEl.style.display = 'none';
 
-    // Scroll to pricing
+    // If user already picked a plan before choosing a domain, go straight to checkout
+    if (pendingPlan) {
+      var plan = pendingPlan;
+      pendingPlan = null;
+      startCheckoutFlow(plan.name, plan.period);
+      return;
+    }
+
+    // Otherwise scroll to pricing so they can pick a plan
     var pricing = document.getElementById('pricing');
     if (pricing) {
       setTimeout(function () {
@@ -173,14 +182,45 @@
     }
   }
 
+  // --- Checkout flow ---
+
+  function startCheckoutFlow(planName, period) {
+    // Prompt for email then create checkout
+    var email = prompt('Enter your email to get started:');
+    if (!email || !email.includes('@')) return;
+
+    // Final confirmation with domain refund warning
+    var finalConfirm = confirm(
+      'You are about to purchase:\n\n' +
+      'Plan: ' + planName.charAt(0).toUpperCase() + planName.slice(1) + ' (' + period + ')\n' +
+      'Domain: www.' + selectedDomain + '\n\n' +
+      'REMINDER: Domain name purchases are NON-REFUNDABLE.\n' +
+      'Please verify the domain spelling one last time.\n\n' +
+      'Proceed to checkout?'
+    );
+    if (!finalConfirm) return;
+
+    createCheckout(email, selectedDomain, planName, period);
+  }
+
   // --- Pricing button wiring ---
 
   document.querySelectorAll('.pricing-card a').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
 
+      // Determine plan from card
+      var card = btn.closest('.pricing-card');
+      var planName = card.querySelector('.pricing-name').textContent.toLowerCase();
+
+      // Determine billing period
+      var billingToggle = document.getElementById('billingToggle');
+      var period = (billingToggle && billingToggle.checked) ? 'annual' : 'monthly';
+
       if (!selectedDomain) {
-        // Scroll to domain search
+        // Remember the plan choice, then send user to pick a domain first
+        pendingPlan = { name: planName, period: period };
+
         var ds = document.getElementById('domain-search');
         if (ds) ds.scrollIntoView({ behavior: 'smooth', block: 'center' });
         searchInput.focus();
@@ -191,30 +231,8 @@
         return;
       }
 
-      // Determine plan from card
-      var card = btn.closest('.pricing-card');
-      var planName = card.querySelector('.pricing-name').textContent.toLowerCase();
-
-      // Determine billing period
-      var billingToggle = document.getElementById('billingToggle');
-      var period = (billingToggle && billingToggle.checked) ? 'annual' : 'monthly';
-
-      // Prompt for email then create checkout
-      var email = prompt('Enter your email to get started:');
-      if (!email || !email.includes('@')) return;
-
-      // Final confirmation with domain refund warning
-      var finalConfirm = confirm(
-        'You are about to purchase:\n\n' +
-        'Plan: ' + planName.charAt(0).toUpperCase() + planName.slice(1) + ' (' + period + ')\n' +
-        'Domain: www.' + selectedDomain + '\n\n' +
-        'REMINDER: Domain name purchases are NON-REFUNDABLE.\n' +
-        'Please verify the domain spelling one last time.\n\n' +
-        'Proceed to checkout?'
-      );
-      if (!finalConfirm) return;
-
-      createCheckout(email, selectedDomain, planName, period);
+      // Domain already selected — go straight to checkout
+      startCheckoutFlow(planName, period);
     });
   });
 
