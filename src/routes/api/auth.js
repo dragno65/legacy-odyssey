@@ -106,6 +106,13 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+// POST /api/auth/logout
+router.post('/logout', async (req, res) => {
+  // JWT-based auth doesn't require server-side session invalidation.
+  // The client clears its stored tokens. We return success.
+  res.json({ success: true });
+});
+
 // POST /api/auth/refresh
 router.post('/refresh', async (req, res, next) => {
   try {

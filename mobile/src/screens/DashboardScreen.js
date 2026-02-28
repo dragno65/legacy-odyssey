@@ -7,10 +7,12 @@ import {
   FlatList,
   RefreshControl,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, typography, shadows, borderRadius } from '../theme';
 import { get } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 
 const SECTIONS = [
   { key: 'childInfo', title: 'Welcome / Child Info', icon: '\u{1F476}', screen: 'ChildInfo' },
@@ -28,10 +30,13 @@ const SECTIONS = [
 ];
 
 export default function DashboardScreen({ navigation }) {
+  const { user, families, activeFamilyId, switchFamily, refreshFamilies } = useAuth();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   async function fetchBook() {
     try {
@@ -48,17 +53,38 @@ export default function DashboardScreen({ navigation }) {
     fetchBook().finally(() => setLoading(false));
   }, []);
 
-  // Refetch on focus (returning from an editor)
+  // Refetch on focus (returning from an editor) or when active family changes
   useFocusEffect(
     useCallback(() => {
       fetchBook();
-    }, [])
+    }, [activeFamilyId])
   );
 
   async function onRefresh() {
     setRefreshing(true);
     await fetchBook();
+    await refreshFamilies();
     setRefreshing(false);
+  }
+
+  async function handleSwitchFamily(familyId) {
+    if (familyId === activeFamilyId) {
+      setShowSwitcher(false);
+      return;
+    }
+    setSwitching(true);
+    try {
+      await switchFamily(familyId);
+      setShowSwitcher(false);
+      // Refetch book for the new family
+      setLoading(true);
+      await fetchBook();
+    } catch (err) {
+      setError('Failed to switch books.');
+    } finally {
+      setSwitching(false);
+      setLoading(false);
+    }
   }
 
   function getChildName() {
@@ -67,6 +93,12 @@ export default function DashboardScreen({ navigation }) {
     const first = child.first_name || child.firstName || '';
     const last = child.last_name || child.lastName || '';
     if (first || last) return `${first} ${last}`.trim();
+    return '';
+  }
+
+  function getBookDomain() {
+    if (user?.custom_domain) return user.custom_domain;
+    if (user?.subdomain) return `${user.subdomain}.legacyodyssey.com`;
     return '';
   }
 
@@ -94,17 +126,36 @@ export default function DashboardScreen({ navigation }) {
   }
 
   const childName = getChildName();
+  const domain = getBookDomain();
+  const hasMultipleBooks = families.length > 1;
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Legacy Odyssey</Text>
-        {childName ? (
-          <Text style={styles.headerSubtitle}>{childName}'s Book</Text>
-        ) : (
-          <Text style={styles.headerSubtitle}>Your Family's Story</Text>
-        )}
+        <View style={styles.headerTop}>
+          <View style={styles.headerTitleArea}>
+            <Text style={styles.headerTitle}>Legacy Odyssey</Text>
+            {childName ? (
+              <Text style={styles.headerSubtitle}>{childName}'s Book</Text>
+            ) : (
+              <Text style={styles.headerSubtitle}>Your Family's Story</Text>
+            )}
+          </View>
+          {hasMultipleBooks && (
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => setShowSwitcher(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.switchIcon}>{'\u{1F4DA}'}</Text>
+              <Text style={styles.switchText}>Switch</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {domain ? (
+          <Text style={styles.headerDomain}>{domain}</Text>
+        ) : null}
       </View>
 
       {error ? (
@@ -134,6 +185,64 @@ export default function DashboardScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Book Switcher Modal */}
+      <Modal
+        visible={showSwitcher}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSwitcher(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Your Books</Text>
+            <Text style={styles.modalSubtitle}>
+              Select a book to edit
+            </Text>
+
+            {families.map((fam) => {
+              const isActive = fam.id === activeFamilyId;
+              const label = fam.childName || fam.display_name || fam.subdomain || 'Untitled';
+              const domainLabel = fam.custom_domain
+                ? fam.custom_domain
+                : fam.subdomain
+                  ? `${fam.subdomain}.legacyodyssey.com`
+                  : '';
+
+              return (
+                <TouchableOpacity
+                  key={fam.id}
+                  style={[styles.familyCard, isActive && styles.familyCardActive]}
+                  onPress={() => handleSwitchFamily(fam.id)}
+                  disabled={switching}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.familyCardContent}>
+                    <Text style={[styles.familyCardName, isActive && styles.familyCardNameActive]}>
+                      {label}
+                    </Text>
+                    <Text style={styles.familyCardDomain}>{domainLabel}</Text>
+                  </View>
+                  {isActive && (
+                    <Text style={styles.activeIndicator}>{'\u2713'}</Text>
+                  )}
+                  {switching && !isActive && (
+                    <ActivityIndicator size="small" color={colors.gold} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setShowSwitcher(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -161,6 +270,14 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerTitleArea: {
+    flex: 1,
+  },
   headerTitle: {
     fontFamily: typography.fontFamily.serif,
     fontSize: typography.sizes.xxl,
@@ -173,6 +290,31 @@ const styles = StyleSheet.create({
     color: colors.goldLight,
     marginTop: spacing.xs,
     fontStyle: 'italic',
+  },
+  headerDomain: {
+    fontSize: typography.sizes.xs,
+    color: colors.goldLight,
+    marginTop: spacing.sm,
+    opacity: 0.7,
+  },
+  switchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(200, 169, 110, 0.2)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    gap: spacing.xs,
+  },
+  switchIcon: {
+    fontSize: 16,
+  },
+  switchText: {
+    color: colors.gold,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
   },
   errorContainer: {
     backgroundColor: colors.errorLight,
@@ -223,5 +365,86 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.gold,
     fontWeight: typography.weights.medium,
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    fontFamily: typography.fontFamily.serif,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  familyCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...shadows.card,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  familyCardActive: {
+    borderColor: colors.gold,
+    backgroundColor: '#faf7f2',
+  },
+  familyCardContent: {
+    flex: 1,
+  },
+  familyCardName: {
+    fontFamily: typography.fontFamily.serif,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+  },
+  familyCardNameActive: {
+    color: colors.gold,
+  },
+  familyCardDomain: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  activeIndicator: {
+    fontSize: 20,
+    color: colors.gold,
+    fontWeight: typography.weights.bold,
+    marginLeft: spacing.sm,
+  },
+  modalCloseBtn: {
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderRadius: borderRadius.md,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  modalCloseBtnText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
   },
 });
