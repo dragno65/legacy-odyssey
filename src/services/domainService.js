@@ -76,7 +76,7 @@ async function suggestAlternatives(baseName) {
       if (r.status === 'rejected' || !r.value) return null;
       const v = r.value;
       if (!v.available) return null;
-      const underBudget = v.price != null ? v.price <= spaceshipService.MAX_PRICE_YEARLY : true;
+      const underBudget = v.price != null ? v.price <= spaceshipService.MAX_REGISTRATION_PRICE : true;
       if (!underBudget) return null;
       return { domain: v.domain, available: true, price: v.price, underBudget: true };
     })
@@ -132,7 +132,7 @@ async function createDomainOrder({ familyId, domain, stripeSessionId, price }) {
       tld,
       status: 'pending',
       stripe_session_id: stripeSessionId,
-      price_yearly: price,
+      price_yearly: price, // NOTE: this is the one-time registration cost (column name is legacy)
     })
     .select()
     .single();

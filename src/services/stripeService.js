@@ -2,10 +2,52 @@ const { stripe } = require('../config/stripe');
 const familyService = require('./familyService');
 const bookService = require('./bookService');
 
-async function createCheckoutSession({ email, subdomain, domain, successUrl, cancelUrl }) {
+/**
+ * Map of plan + period → Stripe price env var names.
+ * Each plan tier has a monthly and annual price ID configured via env vars.
+ */
+const PRICE_MAP = {
+  starter: {
+    monthly: 'STRIPE_PRICE_STARTER_MONTHLY',
+    annual: 'STRIPE_PRICE_STARTER_ANNUAL',
+  },
+  family: {
+    monthly: 'STRIPE_PRICE_FAMILY_MONTHLY',
+    annual: 'STRIPE_PRICE_FAMILY_ANNUAL',
+  },
+  legacy: {
+    monthly: 'STRIPE_PRICE_LEGACY_MONTHLY',
+    annual: 'STRIPE_PRICE_LEGACY_ANNUAL',
+  },
+};
+
+/**
+ * Resolve the Stripe price ID for a given plan and billing period.
+ * Falls back to STRIPE_PRICE_MONTHLY for backwards compatibility.
+ */
+function resolvePriceId(plan, period) {
+  const tier = PRICE_MAP[plan];
+  if (tier) {
+    const envVar = tier[period] || tier.monthly;
+    const priceId = process.env[envVar];
+    if (priceId) return priceId;
+  }
+
+  // Fallback: legacy single-price env var
+  const fallback = process.env.STRIPE_PRICE_MONTHLY;
+  if (fallback) return fallback;
+
+  throw new Error(`No Stripe price configured for plan="${plan}" period="${period}"`);
+}
+
+async function createCheckoutSession({ email, subdomain, domain, plan, period, successUrl, cancelUrl }) {
   if (!stripe) throw new Error('Stripe not configured');
 
-  const metadata = { subdomain };
+  const resolvedPlan = plan || 'starter';
+  const resolvedPeriod = period || 'monthly';
+  const priceId = resolvePriceId(resolvedPlan, resolvedPeriod);
+
+  const metadata = { subdomain, plan: resolvedPlan, period: resolvedPeriod };
   if (domain) metadata.domain = domain;
 
   const session = await stripe.checkout.sessions.create({
@@ -13,7 +55,7 @@ async function createCheckoutSession({ email, subdomain, domain, successUrl, can
     payment_method_types: ['card'],
     customer_email: email,
     line_items: [{
-      price: process.env.STRIPE_PRICE_MONTHLY,
+      price: priceId,
       quantity: 1,
     }],
     metadata,
@@ -28,6 +70,8 @@ async function handleCheckoutComplete(session) {
   const email = session.customer_email || session.customer_details?.email;
   const subdomain = session.metadata?.subdomain;
   const domain = session.metadata?.domain || null;
+  const plan = session.metadata?.plan || 'starter';
+  const period = session.metadata?.period || 'monthly';
   const stripeCustomerId = session.customer;
   const stripeSubscriptionId = session.subscription;
 
@@ -50,10 +94,12 @@ async function handleCheckoutComplete(session) {
     stripeCustomerId,
   });
 
-  // Update with subscription ID
+  // Update with subscription ID and plan details
   await familyService.update(family.id, {
     stripe_subscription_id: stripeSubscriptionId,
     subscription_status: 'active',
+    plan,
+    billing_period: period,
   });
 
   // Create book with default content

@@ -829,11 +829,31 @@ h1, h2, h3, h4, h5 {
   margin-bottom: 0.8rem;
 }
 
-.pricing-note {
+.pricing-addon {
   text-align: center;
   margin-top: 2rem;
+  font-size: 1rem;
+  color: var(--ink-mid);
+}
+
+.pricing-note {
+  text-align: center;
+  margin-top: 0.75rem;
   font-size: 0.85rem;
   color: var(--ink-light);
+}
+
+.domain-refund-notice {
+  text-align: center;
+  max-width: 600px;
+  margin: 1.5rem auto 0;
+  padding: 1rem 1.5rem;
+  background: #FFF8F0;
+  border: 1px solid var(--gold-light);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--ink-mid);
+  line-height: 1.5;
 }
 
 .pricing-cards {

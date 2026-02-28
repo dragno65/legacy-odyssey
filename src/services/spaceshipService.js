@@ -1,6 +1,6 @@
 const { spaceship } = require('../config/spaceship');
 
-const MAX_PRICE_YEARLY = 20; // Don't purchase domains over $20/year
+const MAX_REGISTRATION_PRICE = 20; // Don't purchase domains that cost more than $20 to register
 
 const PRIMARY_TLDS = ['com', 'family', 'baby', 'love', 'life', 'me'];
 
@@ -48,7 +48,7 @@ async function checkMultipleTlds(baseName, tlds = PRIMARY_TLDS) {
       const tld = item.domain.split('.').slice(1).join('.');
       const premium = item.premiumPricing?.[0];
       const price = premium?.price != null ? parseFloat(premium.price) : null;
-      const underBudget = price != null ? price <= MAX_PRICE_YEARLY : true;
+      const underBudget = price != null ? price <= MAX_REGISTRATION_PRICE : true;
       return {
         domain: item.domain,
         tld,
@@ -148,5 +148,5 @@ module.exports = {
   pollOperation,
   setupDns,
   PRIMARY_TLDS,
-  MAX_PRICE_YEARLY,
+  MAX_REGISTRATION_PRICE,
 };

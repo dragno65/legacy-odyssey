@@ -148,6 +148,16 @@
   // --- Selection ---
 
   function selectDomain(domain) {
+    // Confirm spelling before locking in domain selection
+    var confirmed = confirm(
+      'You selected: www.' + domain + '\n\n' +
+      'PLEASE CHECK THE SPELLING CAREFULLY.\n\n' +
+      'Domain name purchases are non-refundable once registered. ' +
+      'We cannot change or refund your domain after purchase.\n\n' +
+      'Is the spelling correct?'
+    );
+    if (!confirmed) return;
+
     selectedDomain = domain;
     selectedNameEl.textContent = 'www.' + domain;
     selectedEl.style.display = 'flex';
@@ -192,6 +202,17 @@
       // Prompt for email then create checkout
       var email = prompt('Enter your email to get started:');
       if (!email || !email.includes('@')) return;
+
+      // Final confirmation with domain refund warning
+      var finalConfirm = confirm(
+        'You are about to purchase:\n\n' +
+        'Plan: ' + planName.charAt(0).toUpperCase() + planName.slice(1) + ' (' + period + ')\n' +
+        'Domain: www.' + selectedDomain + '\n\n' +
+        'REMINDER: Domain name purchases are NON-REFUNDABLE.\n' +
+        'Please verify the domain spelling one last time.\n\n' +
+        'Proceed to checkout?'
+      );
+      if (!finalConfirm) return;
 
       createCheckout(email, selectedDomain, planName, period);
     });
