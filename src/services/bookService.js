@@ -213,7 +213,7 @@ async function createBookWithDefaults(familyId) {
       child_first_name: '',
       child_middle_name: '',
       child_last_name: '',
-      parent_quote: 'From the moment we first saw your face, our world was never the same. This is your story — every moment, every milestone, every memory — written just for you.',
+      parent_quote: 'From the moment we first saw your face, our world was never the same. This is your story \u2014 every moment, every milestone, every memory \u2014 written just for you.',
       parent_quote_attribution: 'Mom & Dad',
     })
     .select()
@@ -262,3 +262,4 @@ module.exports = {
   updateSectionCards,
   createBookWithDefaults,
 };
+

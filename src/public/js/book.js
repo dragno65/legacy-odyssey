@@ -1,5 +1,5 @@
 // Legacy Odyssey Book Client-Side JavaScript
-// Navigation, modals, month grid, family detail, vault countdown
+// Navigation, modals, month grid, family detail, vault countdown, image lightbox
 // Data (months, familyMembers, birthDate) is injected by server via <script> tags in book.ejs
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -49,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="month-label">${m.label}</div>
             <div class="month-highlight">${m.highlight}</div>
             <div class="month-stats">
-              <span class="month-stat-sm">\u2696\uFE0F ${m.weight}</span>
-              <span class="month-stat-sm">\uD83D\uDCCF ${m.length}</span>
+              <span class="month-stat-sm">⚖️ ${m.weight}</span>
+              <span class="month-stat-sm">📏 ${m.length}</span>
             </div>
           </div>
         `;
