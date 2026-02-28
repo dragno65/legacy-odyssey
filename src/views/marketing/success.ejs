@@ -3,68 +3,318 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Legacy Odyssey</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>Welcome to Legacy Odyssey!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Jost', sans-serif; background: #faf7f2; color: #2c2416; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .success-card { max-width: 520px; margin: 2rem; padding: 3rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; }
-    .success-icon { font-size: 3rem; margin-bottom: 1rem; }
-    h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .subtitle { color: #8a7e6b; margin-bottom: 2rem; }
-    .credentials { background: #faf7f2; border: 1px solid #e0d5c4; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; text-align: left; }
-    .credentials h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; margin-bottom: 0.75rem; color: #c8a96e; }
-    .cred-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #e0d5c4; }
-    .cred-row:last-child { border-bottom: none; }
-    .cred-label { color: #8a7e6b; font-size: 0.9rem; }
-    .cred-value { font-weight: 500; font-size: 0.9rem; word-break: break-all; }
-    .warning { font-size: 0.85rem; color: #c0392b; margin-top: 0.75rem; }
-    .domain-setup { background: #f0f7f1; border: 1px solid #a8c5ab; border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; text-align: left; }
-    .domain-setup h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; margin-bottom: 0.5rem; color: #7a9e7e; }
-    .domain-setup p { font-size: 0.9rem; color: #4a3f32; line-height: 1.5; }
-    .domain-setup .domain-name { font-weight: 600; color: #2c2416; }
-    .btn { display: inline-block; margin-top: 1.5rem; padding: 0.85rem 2rem; background: #c8a96e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; transition: background 0.2s; }
-    .btn:hover { background: #b08e4a; }
-    .book-url { margin-top: 1rem; font-size: 0.9rem; color: #8a7e6b; }
-    .book-url a { color: #c8a96e; }
+    body {
+      font-family: 'Jost', sans-serif;
+      background: #faf7f2;
+      color: #2c2416;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .success-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .success-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .success-icon { font-size: 3.5rem; margin-bottom: 0.75rem; }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #8a7e6b;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    /* Card sections */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .card h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-icon { font-size: 1.4rem; }
+
+    /* Order summary */
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f0ebe3;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { color: #8a7e6b; font-size: 0.9rem; }
+    .summary-value { font-weight: 500; font-size: 0.95rem; word-break: break-all; }
+    .summary-value a { color: #c8a96e; text-decoration: none; }
+    .summary-value a:hover { text-decoration: underline; }
+
+    /* Domain status */
+    .domain-status {
+      background: #f0f7f1;
+      border: 1px solid #a8c5ab;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #3d6b42;
+      line-height: 1.5;
+    }
+    .domain-status strong { color: #2c2416; }
+
+    /* Steps */
+    .steps-list {
+      list-style: none;
+      counter-reset: step-counter;
+    }
+    .steps-list li {
+      counter-increment: step-counter;
+      display: flex;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid #f0ebe3;
+      align-items: flex-start;
+    }
+    .steps-list li:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #c8a96e;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .step-content h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .step-content p {
+      font-size: 0.9rem;
+      color: #6b5f4f;
+      line-height: 1.5;
+    }
+
+    /* Password box */
+    .password-box {
+      background: #faf7f2;
+      border: 2px dashed #c8a96e;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .password-label { font-size: 0.85rem; color: #8a7e6b; margin-bottom: 0.4rem; }
+    .password-value {
+      font-family: monospace;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #2c2416;
+      letter-spacing: 0.5px;
+      user-select: all;
+    }
+    .password-warning {
+      font-size: 0.8rem;
+      color: #c0392b;
+      margin-top: 0.6rem;
+      font-weight: 500;
+    }
+    .password-note {
+      font-size: 0.85rem;
+      color: #8a7e6b;
+      margin-top: 0.6rem;
+    }
+
+    /* CTA buttons */
+    .cta-section {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .btn-primary {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      background: #c8a96e;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #b08e4a; }
+    .cta-note {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: #8a7e6b;
+    }
+
+    /* Email note */
+    .email-note {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #fff8f0;
+      border: 1px solid #e0d5c4;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #6b5f4f;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .success-footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e0d5c4;
+      font-size: 0.85rem;
+      color: #8a7e6b;
+    }
+    .success-footer a { color: #c8a96e; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="success-card">
-    <div class="success-icon">&#10024;</div>
-    <h1>Your Book Is Ready</h1>
-    <p class="subtitle">Welcome to Legacy Odyssey! Your family's story starts now.</p>
+  <div class="success-wrap">
 
-    <% if (domain) { %>
-    <div class="domain-setup">
-      <h3>&#127760; Your Domain</h3>
-      <p>
-        <span class="domain-name">www.<%= domain %></span> is being set up.
-        This typically takes 5&ndash;30 minutes. We'll have it pointing to your book automatically.
+    <!-- Header -->
+    <div class="success-header">
+      <div class="success-icon">&#127881;</div>
+      <h1>Payment Successful!</h1>
+      <p class="subtitle">
+        Welcome to Legacy Odyssey! Your account has been created and your
+        family's story is ready to begin.
       </p>
     </div>
-    <% } %>
 
-    <div class="credentials">
-      <h3>Your Account Details</h3>
-      <div class="cred-row">
-        <span class="cred-label">Book URL (available now)</span>
-        <span class="cred-value"><a href="https://<%= appDomain %>/book/<%= subdomain %>">https://<%= appDomain %>/book/<%= subdomain %></a></span>
+    <!-- Order Summary -->
+    <div class="card">
+      <h2><span class="card-icon">&#128203;</span> Your Order</h2>
+      <div class="summary-row">
+        <span class="summary-label">Plan</span>
+        <span class="summary-value"><%= plan.charAt(0).toUpperCase() + plan.slice(1) %></span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Email</span>
+        <span class="summary-value"><%= email %></span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Your Book</span>
+        <span class="summary-value"><a href="https://<%= appDomain %>/book/<%= subdomain %>">legacyodyssey.com/book/<%= subdomain %></a></span>
       </div>
       <% if (domain) { %>
-      <div class="cred-row">
-        <span class="cred-label">Custom Domain (coming soon)</span>
-        <span class="cred-value">www.<%= domain %></span>
+      <div class="summary-row">
+        <span class="summary-label">Custom Domain</span>
+        <span class="summary-value">www.<%= domain %></span>
+      </div>
+      <div class="domain-status">
+        &#9203; <strong>www.<%= domain %></strong> is being set up now.
+        This typically takes 5&ndash;30 minutes. Once it's ready, visitors can go
+        directly to your custom domain to see your site.
       </div>
       <% } %>
-      <div class="cred-row">
-        <span class="cred-label">Temporary Password</span>
-        <span class="cred-value"><%= tempPassword %></span>
-      </div>
-      <p class="warning">Save this password! You'll need it to log in to the mobile app and change it.</p>
     </div>
-    <a class="btn" href="https://<%= appDomain %>/book/<%= subdomain %>">View Your Book</a>
-    <p class="book-url">Download the <strong>Legacy Odyssey</strong> app to start adding your story.</p>
+
+    <!-- What to do next -->
+    <div class="card">
+      <h2><span class="card-icon">&#128640;</span> What To Do Next</h2>
+      <ol class="steps-list">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>Save Your Password</h3>
+            <p>Below is your temporary password. Write it down or save it somewhere safe. You'll need it to log in.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>Download the App</h3>
+            <p>Search for <strong>"Legacy Odyssey"</strong> in the App Store or Google Play and install it on your phone.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>Log In</h3>
+            <p>Open the app and sign in with your email (<strong><%= email %></strong>) and the temporary password below. You'll be prompted to create a new password.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h3>Start Building Your Site</h3>
+            <p>Upload photos, write letters, track milestones, and fill your book with all the memories that matter most.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Password -->
+    <div class="card">
+      <h2><span class="card-icon">&#128272;</span> Your Temporary Password</h2>
+      <% if (tempPassword) { %>
+      <div class="password-box">
+        <div class="password-label">Your temporary password is:</div>
+        <div class="password-value"><%= tempPassword %></div>
+        <div class="password-warning">&#9888; Save this now! This is the only time it will be shown.</div>
+      </div>
+      <% } else { %>
+      <div class="password-box">
+        <div class="password-label">Password reset required</div>
+        <div class="password-note">
+          A password reset link will be sent to <strong><%= email %></strong>.
+          Check your inbox (and spam folder) to set your password and get started.
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <a class="btn-primary" href="https://<%= appDomain %>/book/<%= subdomain %>">
+        View Your Book &rarr;
+      </a>
+      <p class="cta-note">You can view your site right now, even while your custom domain is being set up.</p>
+    </div>
+
+    <!-- Email note -->
+    <div class="email-note">
+      &#128231; We've sent a confirmation email to <strong><%= email %></strong> with these same instructions.
+      <br>If you don't see it, check your spam folder.
+    </div>
+
+    <!-- Footer -->
+    <div class="success-footer">
+      <p>Questions? Reach out to <a href="mailto:hello@legacyodyssey.com">hello@legacyodyssey.com</a></p>
+      <p style="margin-top: 0.5rem;">&copy; 2026 Legacy Odyssey</p>
+    </div>
+
   </div>
 </body>
 </html>

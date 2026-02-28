@@ -45,6 +45,8 @@ router.post('/verify-password', resolveFamily, async (req, res) => {
 // Stripe success callback
 router.get('/stripe/success', async (req, res) => {
   const { stripe } = require('../config/stripe');
+  const familyService = require('../services/familyService');
+  const stripeService = require('../services/stripeService');
   const sessionId = req.query.session_id;
   if (!sessionId || !stripe) {
     return res.redirect('/');
@@ -52,17 +54,47 @@ router.get('/stripe/success', async (req, res) => {
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.payment_status === 'paid') {
-      const result = await require('../services/stripeService').handleCheckoutComplete(session);
-      // Redirect to the new family's subdomain
-      const appDomain = process.env.APP_DOMAIN || 'legacyodyssey.com';
+    if (session.payment_status !== 'paid') {
+      return res.redirect('/');
+    }
+
+    const appDomain = process.env.APP_DOMAIN || 'legacyodyssey.com';
+    const subdomain = session.metadata?.subdomain;
+    const domain = session.metadata?.domain || null;
+    const plan = session.metadata?.plan || 'starter';
+    const email = session.customer_email || session.customer_details?.email;
+
+    // Try to find the family that the webhook already created
+    let family = null;
+    if (subdomain) {
+      family = await familyService.findBySubdomain(subdomain);
+    }
+    if (!family && session.customer) {
+      family = await familyService.findByStripeCustomerId(session.customer);
+    }
+
+    if (family) {
+      // Webhook already processed — show success page (no temp password available)
       return res.render('marketing/success', {
-        subdomain: result.family.subdomain,
-        domain: result.domain || null,
+        subdomain: family.subdomain,
+        domain,
         appDomain,
-        tempPassword: result.tempPassword,
+        plan,
+        email,
+        tempPassword: null,
       });
     }
+
+    // Webhook hasn't fired yet (rare) — process the checkout ourselves
+    const result = await stripeService.handleCheckoutComplete(session);
+    return res.render('marketing/success', {
+      subdomain: result.family.subdomain,
+      domain: result.domain || null,
+      appDomain,
+      plan,
+      email,
+      tempPassword: result.tempPassword,
+    });
   } catch (err) {
     console.error('Stripe success handler error:', err);
   }
