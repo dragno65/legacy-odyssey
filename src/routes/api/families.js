@@ -12,7 +12,7 @@ router.get('/mine', async (req, res, next) => {
   try {
     const { data: families, error } = await supabaseAdmin
       .from('families')
-      .select('id, email, subdomain, display_name, custom_domain, plan, subscription_status, created_at')
+      .select('id, email, subdomain, display_name, custom_domain, subscription_status, created_at')
       .eq('auth_user_id', req.user.id)
       .order('created_at', { ascending: true });
 
