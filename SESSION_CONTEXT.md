@@ -1,28 +1,35 @@
-# Legacy Odyssey - Session Context (March 1, 2026)
+# Legacy Odyssey - Session Context (March 2, 2026)
 
-## What We're Working On
-The mobile app is NOT showing photos and text that exist on www.eowynhoperagno.com.
+## What Was Done This Session
+Migrated ALL content from the static website (www.eowynhoperagno.com, hosted on GitHub Pages)
+into the Supabase database so the mobile app and Railway-hosted website share the same data.
 
-## Root Cause Found & Fixed (Server-Side)
-The `/api/families/mine` endpoint was crashing because it tried to SELECT a `plan` column
-that doesn't exist in the `families` table. This blocked the mobile app's session restore
-(AuthContext.fetchUserData calls this endpoint first), which prevented content from loading.
+## Migration Summary
+**Script:** `scripts/migrate-website-content.js`
+**What was migrated:**
+- **Book record** - Updated birth details (6:08 PM, 6lbs 9oz, Scottsdale Shea, "Brave & Beautiful")
+- **Hero image** - Downloaded from website slider, uploaded to Supabase Storage
+- **Birth Story** - Full Dad and Mom narratives with Dad's photo
+- **11 Month photos** - All downloaded and uploaded to Supabase Storage
+- **4 Family Members** - Papa Roni, Nan, Memere, Pepere with full stories, meta data, and photos
+- **4 Celebrations** - St. Patrick's Day, Easter, Halloween, Christmas with photos and stories
 
-**Fix:** Removed `plan` from the select query in `src/routes/api/families.js`.
-**Deployed:** Commit 31b99b4, pushed to Railway, endpoint now returns correct data.
+**20 images total** downloaded from the website and uploaded to Supabase Storage.
+All old test data (generic "Mom's Name", "Dad's Name", etc.) was replaced with real content.
 
-## Current Status
-- Server fix is LIVE and verified working via curl
-- User has the latest APK installed (EAS Build: d00f6de8-00fc-4089-b27f-d40cc9b37504)
-- User needs to log out and log back in (or reinstall) to clear stale session state
-- User has NOT yet confirmed if content now shows after re-login
+## API Verification (all confirmed working on Railway)
+- `GET /api/books/mine` → Eowyn Hope Ragno, correct birth info, 11/12 months with photos
+- `GET /api/books/mine/family` → 4 real family members with photos and stories
+- `GET /api/books/mine/celebrations` → 4 holidays with photos
+- `GET /api/books/mine/birth` → Full Dad and Mom narratives
+- `GET /api/books/mine/months` → 11 months with photos, 1 without (month 12)
+- `GET /api/families/mine` → Returns family with childName "Eowyn Ragno", hasBook: true
 
-## API Verification (all confirmed working)
-- `GET /api/families/mine` → returns family with childName "Eowyn Ragno", hasBook: true
-- `GET /api/books/mine` → returns full book with child info, 12 months, password, subdomain
-- `GET /api/books/mine/before` → returns 4 cards with photos and text
-- Database has content: before_arrived_cards (4 with photos), months (12, 1 with photo),
-  family_members (6 with photos), birth_stories (1)
+## Key Discovery: Website vs Railway
+- **www.eowynhoperagno.com** → Hosted on GitHub Pages (IPs 185.199.x.x), static site
+- **Railway app** → legacy-odyssey-production-a9d1.up.railway.app, dynamic database-driven
+- The mobile app connects to Railway, so migrated data is immediately available
+- To make the dynamic site live at eowynhoperagno.com, DNS needs to change from GitHub Pages to Railway
 
 ## Key Database Records
 - Family ID: fb16691d-7ea4-4c93-9827-ffe8904ced6b
@@ -33,49 +40,44 @@ that doesn't exist in the `families` table. This blocked the mobile app's sessio
 - Custom Domain: eowynhoperagno.com
 - Book Password: legacy
 
-## Changes Made This Session
+## Supabase Storage Structure
+All images now stored in the `photos` bucket with paths like:
+- `{familyId}/hero/hero.jpg`
+- `{familyId}/birth/dad-with-baby.png`
+- `{familyId}/months/month-{1-11}.jpg`
+- `{familyId}/family/{paparoni|nan|memere|pepere}.jpg`
+- `{familyId}/celebrations/{holiday-name}.{ext}`
 
-### 1. Token Refresh + Session Restore (mobile/src/api/client.js)
-- Added automatic 401 retry with refresh token in response interceptor
-- Handles concurrent requests during refresh (queue pattern)
-- Sends `X-Family-Id` header with every request for multi-book support
-
-### 2. AuthContext Rewrite (mobile/src/auth/AuthContext.js)
-- Session restore now validates token by fetching family data from API
-- If token expired, tries refresh before logging out
-- Tracks `families` array and `activeFamilyId` state
-- New `switchFamily()` and `refreshFamilies()` methods
-- Login stores refresh token and fetches families list
-
-### 3. Multi-Book Dashboard (mobile/src/screens/DashboardScreen.js)
-- Shows current book's domain in header (e.g., eowynhoperagno.com)
-- "Switch" button appears when user has 2+ books
-- Bottom sheet modal lists all books with child name and domain
-- Tapping a different book switches active family and reloads content
-
-### 4. Backend: Multi-Book Support
-- `src/middleware/requireAuth.js` - Accepts `X-Family-Id` header, falls back to first family
-- `src/routes/api/families.js` - NEW: `GET /api/families/mine` lists all families for user
-- `src/routes/api/auth.js` - Added `POST /api/auth/logout` endpoint
-- `src/server.js` - Registered families route
+## Previous Session Changes (still in effect)
+1. Token refresh + session restore (mobile/src/api/client.js)
+2. AuthContext rewrite with multi-family support (mobile/src/auth/AuthContext.js)
+3. Multi-Book Dashboard with switcher (mobile/src/screens/DashboardScreen.js)
+4. Backend multi-book support (requireAuth.js, families.js, auth.js, server.js)
+5. Families endpoint fix (removed non-existent `plan` column)
 
 ## Git Info
 - All code pushed to: github.com/dragno65/legacy-odyssey (main branch)
 - PAT: stored in .env (not committed)
-- Latest commit: 31b99b4 (Fix families endpoint)
 
 ## Credentials
 - All credentials stored in .env file and Railway env vars (not in repo)
 - Railway API: legacy-odyssey-production-a9d1.up.railway.app
 - Stripe (test mode): configured on Railway with 6 price IDs
 
-## Pending Tasks
-1. **ACTIVE: Verify mobile app shows content** - user needs to log out/in or reinstall
-2. Test the new success page end-to-end (another test checkout)
-3. Set up welcome email with Resend (user wants to defer)
-4. Set up www.legacyodyssey.com DNS (CNAME record)
-5. UI/UX polish on mobile app (page-by-page review)
-6. Final production APK + app store submission (Google $25, Apple $99/yr)
+## What User Should Do Now
+1. Open the mobile app
+2. Log out (Settings > Logout)
+3. Log back in with dragno65@hotmail.com
+4. All sections should now show the real content from the website
+
+## Remaining Tasks
+1. **Verify mobile app shows migrated content** - user needs to log out/in
+2. **Point eowynhoperagno.com DNS to Railway** - currently points to GitHub Pages
+3. Test the new success page end-to-end (another test checkout)
+4. Set up welcome email with Resend (user wants to defer)
+5. Set up www.legacyodyssey.com DNS (CNAME record)
+6. UI/UX polish on mobile app (page-by-page review)
+7. Final production APK + app store submission (Google $25, Apple $99/yr)
 
 ## EAS Build
 - Latest APK: https://expo.dev/accounts/dragno65/projects/legacy-odyssey/builds/d00f6de8-00fc-4089-b27f-d40cc9b37504
