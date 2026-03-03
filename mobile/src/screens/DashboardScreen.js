@@ -143,16 +143,14 @@ export default function DashboardScreen({ navigation }) {
               <Text style={styles.headerSubtitle}>Your Family's Story</Text>
             )}
           </View>
-          {hasMultipleBooks && (
-            <TouchableOpacity
-              style={styles.switchButton}
-              onPress={() => setShowSwitcher(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.switchIcon}>{'\u{1F4DA}'}</Text>
-              <Text style={styles.switchText}>Switch</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => setShowSwitcher(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.switchIcon}>{'\u{1F4DA}'}</Text>
+            <Text style={styles.switchText}>{hasMultipleBooks ? 'Switch' : 'Sites'}</Text>
+          </TouchableOpacity>
         </View>
         {domain ? (
           <Text style={styles.headerDomain}>{domain}</Text>
@@ -233,6 +231,18 @@ export default function DashboardScreen({ navigation }) {
                 </TouchableOpacity>
               );
             })}
+
+            <TouchableOpacity
+              style={styles.newWebsiteBtn}
+              onPress={() => {
+                setShowSwitcher(false);
+                navigation.navigate('NewWebsite');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.newWebsiteIcon}>{'\u2795'}</Text>
+              <Text style={styles.newWebsiteText}>New Website</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.modalCloseBtn}
@@ -434,6 +444,25 @@ const styles = StyleSheet.create({
     color: colors.gold,
     fontWeight: typography.weights.bold,
     marginLeft: spacing.sm,
+  },
+  newWebsiteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.gold,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    gap: spacing.sm,
+    ...shadows.card,
+  },
+  newWebsiteIcon: {
+    fontSize: 16,
+  },
+  newWebsiteText: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.dark,
   },
   modalCloseBtn: {
     marginTop: spacing.lg,

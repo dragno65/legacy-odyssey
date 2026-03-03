@@ -30,12 +30,24 @@ async function findById(id) {
 }
 
 async function findByAuthUserId(authUserId) {
+  // Returns the first family (for backward compat with .single())
   const { data } = await supabaseAdmin
     .from('families')
     .select('*')
     .eq('auth_user_id', authUserId)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .single();
   return data;
+}
+
+async function findAllByAuthUserId(authUserId) {
+  const { data } = await supabaseAdmin
+    .from('families')
+    .select('*')
+    .eq('auth_user_id', authUserId)
+    .order('created_at', { ascending: true });
+  return data || [];
 }
 
 async function findByStripeCustomerId(stripeCustomerId) {
@@ -101,6 +113,7 @@ module.exports = {
   findBySubdomain,
   findById,
   findByAuthUserId,
+  findAllByAuthUserId,
   findByStripeCustomerId,
   create,
   update,
