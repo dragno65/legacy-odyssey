@@ -26,6 +26,7 @@ import CelebrationsScreen from './src/screens/CelebrationsScreen';
 import LettersScreen from './src/screens/LettersScreen';
 import RecipesScreen from './src/screens/RecipesScreen';
 import VaultScreen from './src/screens/VaultScreen';
+import ManageSectionsScreen from './src/screens/ManageSectionsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import PreviewScreen from './src/screens/PreviewScreen';
 
@@ -90,6 +91,7 @@ function AppNavigator() {
       <AppStack.Screen name="Letters" component={LettersScreen} options={{ title: 'Letters to You' }} />
       <AppStack.Screen name="FamilyRecipes" component={RecipesScreen} options={{ title: 'Family Recipes' }} />
       <AppStack.Screen name="TheVault" component={VaultScreen} options={{ title: 'The Vault' }} />
+      <AppStack.Screen name="ManageSections" component={ManageSectionsScreen} options={{ title: 'Website Sections' }} />
       <AppStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
       <AppStack.Screen name="Preview" component={PreviewScreen} options={{ title: 'Book Preview' }} />
     </AppStack.Navigator>

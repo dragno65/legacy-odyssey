@@ -12,6 +12,21 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors, spacing, typography, shadows, borderRadius } from '../theme';
 import client, { BASE_URL } from '../api/client';
 
+/**
+ * Extract the Supabase Storage path from a full public URL.
+ * e.g., "https://xxx.supabase.co/storage/v1/object/public/photos/familyId/section/file.jpg"
+ *   -> "familyId/section/file.jpg"
+ */
+function extractStoragePath(photoUrl) {
+  if (!photoUrl) return null;
+  // If it's already a storage path (not a URL), return as-is
+  if (!photoUrl.startsWith('http')) return photoUrl;
+  const marker = '/photos/';
+  const idx = photoUrl.indexOf(marker);
+  if (idx !== -1) return photoUrl.substring(idx + marker.length);
+  return null;
+}
+
 export default function PhotoPicker({ currentPhoto, onPhotoSelected }) {
   const [uploading, setUploading] = useState(false);
 
@@ -100,12 +115,55 @@ export default function PhotoPicker({ currentPhoto, onPhotoSelected }) {
     }
   }
 
+  function confirmRemovePhoto() {
+    Alert.alert(
+      'Remove Photo',
+      'Are you sure you want to remove this photo?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: removePhoto },
+      ]
+    );
+  }
+
+  async function removePhoto() {
+    setUploading(true);
+    try {
+      const storagePath = extractStoragePath(currentPhoto);
+      if (storagePath) {
+        try {
+          await client.delete(`/api/photos/${encodeURIComponent(storagePath)}`);
+        } catch (err) {
+          // If server delete fails, still clear locally (photo might not be in storage)
+          console.warn('Photo storage delete error:', err.message);
+        }
+      }
+      // Clear the photo in parent state
+      onPhotoSelected(null);
+    } catch (err) {
+      Alert.alert('Error', 'Could not remove photo.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function showOptions() {
-    Alert.alert('Choose Photo', 'Select a source', [
+    const options = [
       { text: 'Camera', onPress: takePhoto },
       { text: 'Photo Library', onPress: pickImage },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    ];
+
+    if (currentPhoto) {
+      options.push({
+        text: 'Remove Photo',
+        style: 'destructive',
+        onPress: confirmRemovePhoto,
+      });
+    }
+
+    options.push({ text: 'Cancel', style: 'cancel' });
+
+    Alert.alert('Photo', 'Select an option', options);
   }
 
   const photoUri = getPhotoUri(currentPhoto);

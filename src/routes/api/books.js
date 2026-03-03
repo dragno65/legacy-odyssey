@@ -70,6 +70,51 @@ router.get('/mine/full', async (req, res, next) => {
   }
 });
 
+// GET /api/books/mine/sections — Get which sections are visible on the website
+router.get('/mine/sections', async (req, res, next) => {
+  try {
+    const data = await bookService.getFullBook(req.family.id);
+    if (!data) return res.status(404).json({ error: 'No book found' });
+    res.json(data.visibleSections);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/books/mine/sections — Override section visibility
+router.put('/mine/sections', async (req, res, next) => {
+  try {
+    const book = await bookService.getBookByFamilyId(req.family.id);
+    if (!book) return res.status(404).json({ error: 'No book found' });
+
+    const VALID_KEYS = ['before', 'birth', 'home', 'months', 'family', 'firsts', 'holidays', 'letters', 'recipes', 'vault'];
+    const current = book.visible_sections || {};
+
+    for (const [key, value] of Object.entries(req.body)) {
+      if (VALID_KEYS.includes(key) && typeof value === 'boolean') {
+        current[key] = value;
+      }
+    }
+
+    try {
+      await bookService.updateBook(book.id, { visible_sections: current });
+    } catch (dbErr) {
+      // If visible_sections column doesn't exist yet, ignore gracefully
+      if (dbErr.message && dbErr.message.includes('visible_sections')) {
+        console.warn('visible_sections column not yet added to books table');
+      } else {
+        throw dbErr;
+      }
+    }
+
+    // Return the computed sections (which includes overrides if column exists)
+    const data = await bookService.getFullBook(req.family.id);
+    res.json(data.visibleSections);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PUT /api/books/mine — Update child info
 router.put('/mine', async (req, res, next) => {
   try {

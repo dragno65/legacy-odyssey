@@ -1,6 +1,79 @@
 const { supabaseAdmin } = require('../config/supabase');
 const seedData = require('../utils/seedData');
 
+// --- Helpers ---
+
+/**
+ * Compute which sections have meaningful user content (not just seed/default data).
+ * Returns an object like { before: true, birth: false, ... }
+ */
+function computeVisibleSections(data) {
+  const hasText = (v) => v && typeof v === 'string' && v.trim().length > 0;
+  const hasPhoto = (v) => v && typeof v === 'string' && v.trim().length > 0;
+
+  // Before You Arrived: at least one card has body text or photo
+  const before = (data.beforeCards || []).some(
+    (c) => hasText(c.body) || hasPhoto(c.photo_path)
+  );
+
+  // Birth Story: has mom or dad narrative
+  const birth =
+    hasText(data.birthStory?.mom_narrative) ||
+    hasText(data.birthStory?.dad_narrative);
+
+  // Coming Home: at least one card has body text or photo
+  const home = (data.comingHomeCards || []).some(
+    (c) => hasText(c.body) || hasPhoto(c.photo_path)
+  );
+
+  // Months: at least one month has a photo or note
+  const months = (data.months || []).some(
+    (m) => hasPhoto(m.photo_path) || hasText(m.note)
+  );
+
+  // Family: at least one member has a story or non-default name
+  const family = (data.familyMembers || []).some(
+    (fm) => hasText(fm.story) || hasPhoto(fm.photo_path)
+  );
+
+  // Firsts: at least one first has a note or date
+  const firsts = (data.firsts || []).some(
+    (f) => hasText(f.note) || hasText(f.date_text)
+  );
+
+  // Celebrations / Holidays: at least one has body text or photo
+  const holidays = (data.celebrations || []).some(
+    (c) => hasText(c.body) || hasPhoto(c.photo_path)
+  );
+
+  // Letters: at least one has body text
+  const letters = (data.letters || []).some((l) => hasText(l.body));
+
+  // Recipes: at least one has description or photo
+  const recipes = (data.recipes || []).some(
+    (r) => hasText(r.description) || hasPhoto(r.photo_path)
+  );
+
+  // Vault: has any items
+  const vault = (data.vaultItems || []).length > 0;
+
+  // Use manual overrides from visible_sections column if it exists on the book
+  const overrides = data.book?.visible_sections || {};
+
+  return {
+    before: overrides.before !== undefined ? overrides.before : before,
+    birth: overrides.birth !== undefined ? overrides.birth : birth,
+    home: overrides.home !== undefined ? overrides.home : home,
+    months: overrides.months !== undefined ? overrides.months : months,
+    family: overrides.family !== undefined ? overrides.family : family,
+    firsts: overrides.firsts !== undefined ? overrides.firsts : firsts,
+    holidays: overrides.holidays !== undefined ? overrides.holidays : holidays,
+    letters: overrides.letters !== undefined ? overrides.letters : letters,
+    recipes: overrides.recipes !== undefined ? overrides.recipes : recipes,
+    vault: overrides.vault !== undefined ? overrides.vault : vault,
+  };
+}
+
 // --- Read operations ---
 
 async function getBookByFamilyId(familyId) {
@@ -42,7 +115,7 @@ async function getFullBook(familyId) {
     supabaseAdmin.from('vault_items').select('*').eq('book_id', book.id).order('created_at'),
   ]);
 
-  return {
+  const result = {
     book,
     beforeCards: beforeCards || [],
     checklist: checklist || [],
@@ -56,6 +129,9 @@ async function getFullBook(familyId) {
     recipes: recipes || [],
     vaultItems: vaultItems || [],
   };
+
+  result.visibleSections = computeVisibleSections(result);
+  return result;
 }
 
 // --- Write operations ---
@@ -261,5 +337,6 @@ module.exports = {
   upsertBirthStory,
   updateSectionCards,
   createBookWithDefaults,
+  computeVisibleSections,
 };
 

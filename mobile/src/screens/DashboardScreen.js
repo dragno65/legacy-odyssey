@@ -26,6 +26,7 @@ const SECTIONS = [
   { key: 'letters', title: 'Letters to You', icon: '\u{1F48C}', screen: 'Letters' },
   { key: 'recipes', title: 'Family Recipes', icon: '\u{1F373}', screen: 'FamilyRecipes' },
   { key: 'vault', title: 'The Vault', icon: '\u{1F512}', screen: 'TheVault' },
+  { key: 'manageSections', title: 'Website Sections', icon: '\u{1F310}', screen: 'ManageSections' },
   { key: 'settings', title: 'Settings', icon: '\u{2699}\u{FE0F}', screen: 'Settings' },
 ];
 

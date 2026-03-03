@@ -10,26 +10,47 @@
 <body>
   <div id="app">
     <!-- Sidebar -->
-    <%- include('../book/sidebar', { book, family }) %>
+    <%- include('../book/sidebar', { book, family, visibleSections }) %>
 
     <!-- Main Content -->
     <div id="main-content">
       <%- include('../book/welcome', { book, imageUrl }) %>
-      <%- include('../book/before', { beforeCards, checklist, imageUrl }) %>
-      <%- include('../book/birth', { book, birthStory, imageUrl }) %>
-      <%- include('../book/home', { comingHomeCards, imageUrl }) %>
-      <%- include('../book/months', { months, imageUrl }) %>
-      <%- include('../book/family', { familyMembers, imageUrl }) %>
-      <%- include('../book/firsts', { firsts }) %>
-      <%- include('../book/holidays', { celebrations, imageUrl }) %>
-      <%- include('../book/letters', { book, letters }) %>
-      <%- include('../book/recipes', { recipes, imageUrl }) %>
-      <%- include('../book/vault', { book, vaultItems }) %>
+      <% if (visibleSections.before) { %>
+        <%- include('../book/before', { beforeCards, checklist, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.birth) { %>
+        <%- include('../book/birth', { book, birthStory, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.home) { %>
+        <%- include('../book/home', { comingHomeCards, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.months) { %>
+        <%- include('../book/months', { months, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.family) { %>
+        <%- include('../book/family', { familyMembers, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.firsts) { %>
+        <%- include('../book/firsts', { firsts }) %>
+      <% } %>
+      <% if (visibleSections.holidays) { %>
+        <%- include('../book/holidays', { celebrations, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.letters) { %>
+        <%- include('../book/letters', { book, letters }) %>
+      <% } %>
+      <% if (visibleSections.recipes) { %>
+        <%- include('../book/recipes', { recipes, imageUrl }) %>
+      <% } %>
+      <% if (visibleSections.vault) { %>
+        <%- include('../book/vault', { book, vaultItems }) %>
+      <% } %>
     </div>
   </div>
 
   <!-- Inject data for client-side JS (modals, etc.) -->
   <script>
+    <% if (visibleSections.months) { %>
     const months = <%- JSON.stringify((months || []).map(m => ({
       num: m.month_number,
       label: m.label,
@@ -39,7 +60,11 @@
       photo: m.photo_path ? imageUrl(m.photo_path) : null,
       note: m.note
     }))) %>;
+    <% } else { %>
+    const months = [];
+    <% } %>
 
+    <% if (visibleSections.family) { %>
     const familyMembers = <%- JSON.stringify(
       Object.fromEntries((familyMembers || []).map(fm => [fm.member_key, {
         name: fm.name,
@@ -62,9 +87,12 @@
         ].filter(p => p.img || p.caption)
       }]))
     ) %>;
+    <% } else { %>
+    const familyMembers = {};
+    <% } %>
 
     // Birth date for vault countdown
-        window.birthDate = '<%= book.birth_date || '' %>';
+    window.birthDate = '<%= book.birth_date || '' %>';
   </script>
 
 
