@@ -67,7 +67,7 @@ app.use('/api/domains/search', domainSearchLimiter);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: '2.1.0', timestamp: new Date().toISOString() });
 });
 
 // API routes (JSON — consumed by mobile app)
