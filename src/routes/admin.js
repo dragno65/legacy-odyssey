@@ -270,6 +270,7 @@ router.post('/customers/new', requireAdmin, async (req, res, next) => {
     // 6. Render success page
     const childName = `${child_first_name.trim()} ${(child_last_name || '').trim()}`.trim();
     const apkUrl = 'https://expo.dev/artifacts/eas/dEWDhAKzbdohggvEofzuEy.apk';
+    const expoGoUrl = 'https://expo.dev/accounts/dragno65/projects/legacy-odyssey/updates/6eb62faf-2a25-4892-a438-7339b8d9df19';
 
     res.render('admin/customer-created', {
       admin: req.admin,
@@ -285,6 +286,7 @@ router.post('/customers/new', requireAdmin, async (req, res, next) => {
         family_id: family.id,
       },
       apkUrl,
+      expoGoUrl,
     });
 
   } catch (err) {
