@@ -3,23 +3,266 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Detail - Legacy Odyssey</title>
+  <title><%= family.display_name || 'Customer' %> — Admin — Legacy Odyssey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-  <div id="family-detail">
-    <h1>Family Detail</h1>
-    <form action="/admin/family" method="POST">
-      <div>
-        <label for="familyName">Family Name</label>
-        <input type="text" id="familyName" name="familyName" required>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <h2>&#10022; Legacy Odyssey</h2>
+        <span>Admin Portal</span>
       </div>
-      <div>
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required>
+      <nav class="sidebar-nav">
+        <a href="/admin">
+          <span class="nav-icon">&#128202;</span> Dashboard
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="admin-email"><%= admin.email %></div>
+        <form action="/admin/logout" method="POST" style="display:inline;">
+          <button type="submit" class="logout-btn">&#x2192; Sign Out</button>
+        </form>
       </div>
-      <button type="submit">Save</button>
-    </form>
-    <a href="/admin/dashboard">Back to Dashboard</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="page-header">
+        <p style="margin-bottom: 8px;"><a href="/admin">&larr; Back to Dashboard</a></p>
+        <h1><%= family.display_name || 'Customer Detail' %></h1>
+        <p>
+          <% if (!family.is_active) { %>
+            <span class="badge badge-inactive">Inactive</span>
+          <% } else { %>
+            <span class="badge badge-<%= family.subscription_status %>"><%= family.subscription_status %></span>
+          <% } %>
+          &nbsp;&middot;&nbsp;
+          Joined <%= family.created_at ? new Date(family.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown' %>
+        </p>
+      </div>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="flash-message flash-success"><%= success %></div>
+      <% } %>
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="flash-message flash-error"><%= error %></div>
+      <% } %>
+
+      <form action="/admin/families/<%= family.id %>" method="POST">
+        <div class="detail-grid">
+          <!-- Left Column -->
+          <div>
+            <!-- Account Info -->
+            <div class="detail-card">
+              <h3>Account Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Display Name</label>
+                  <input type="text" name="display_name" value="<%= family.display_name || '' %>" placeholder="Family name">
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" name="email" value="<%= family.email || '' %>">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Book Password</label>
+                <input type="text" name="book_password" value="<%= family.book_password || '' %>">
+                <div class="help-text">Password visitors need to view the public book</div>
+              </div>
+            </div>
+
+            <!-- Website Info -->
+            <div class="detail-card">
+              <h3>Website</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Subdomain</label>
+                  <input type="text" name="subdomain" value="<%= family.subdomain || '' %>" placeholder="e.g. smithfamily">
+                  <% if (family.subdomain) { %>
+                    <div class="help-text">
+                      <a href="/book/<%= family.subdomain %>" target="_blank"><%= family.subdomain %>.legacyodyssey.com &#8599;</a>
+                    </div>
+                  <% } %>
+                </div>
+                <div class="form-group">
+                  <label>Custom Domain</label>
+                  <input type="text" name="custom_domain" value="<%= family.custom_domain || '' %>" placeholder="e.g. www.example.com">
+                  <% if (family.custom_domain) { %>
+                    <div class="help-text">
+                      <a href="https://<%= family.custom_domain %>" target="_blank"><%= family.custom_domain %> &#8599;</a>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subscription -->
+            <div class="detail-card">
+              <h3>Subscription</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Status</label>
+                  <select name="subscription_status">
+                    <option value="trialing" <%= family.subscription_status === 'trialing' ? 'selected' : '' %>>Trialing</option>
+                    <option value="active" <%= family.subscription_status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="past_due" <%= family.subscription_status === 'past_due' ? 'selected' : '' %>>Past Due</option>
+                    <option value="canceled" <%= family.subscription_status === 'canceled' ? 'selected' : '' %>>Canceled</option>
+                    <option value="unpaid" <%= family.subscription_status === 'unpaid' ? 'selected' : '' %>>Unpaid</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Trial Ends</label>
+                  <input type="text" value="<%= family.trial_ends_at ? new Date(family.trial_ends_at).toLocaleDateString('en-US') : 'N/A' %>" readonly>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Stripe Customer ID</label>
+                  <% if (family.stripe_customer_id) { %>
+                    <input type="text" value="<%= family.stripe_customer_id %>" readonly>
+                    <div class="help-text">
+                      <a href="https://dashboard.stripe.com/customers/<%= family.stripe_customer_id %>" target="_blank">View in Stripe &#8599;</a>
+                    </div>
+                  <% } else { %>
+                    <input type="text" value="No Stripe account" readonly>
+                  <% } %>
+                </div>
+                <div class="form-group">
+                  <label>Subscription ID</label>
+                  <input type="text" value="<%= family.stripe_subscription_id || 'None' %>" readonly>
+                </div>
+              </div>
+            </div>
+
+            <!-- Child Info (from book) -->
+            <% if (bookData && bookData.book) { %>
+            <div class="detail-card">
+              <h3>Child Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>First Name</label>
+                  <input type="text" value="<%= bookData.book.child_first_name || '' %>" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Middle Name</label>
+                  <input type="text" value="<%= bookData.book.child_middle_name || '' %>" readonly>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Last Name</label>
+                  <input type="text" value="<%= bookData.book.child_last_name || '' %>" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Birth Date</label>
+                  <input type="text" value="<%= bookData.book.birth_date ? new Date(bookData.book.birth_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Not set' %>" readonly>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Birth City</label>
+                  <input type="text" value="<%= bookData.book.birth_city || '' %><%= bookData.book.birth_state ? ', ' + bookData.book.birth_state : '' %>" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Hospital</label>
+                  <input type="text" value="<%= bookData.book.birth_hospital || '' %>" readonly>
+                </div>
+              </div>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Right Column -->
+          <div>
+            <!-- Dates -->
+            <div class="detail-card">
+              <h3>Account Dates</h3>
+              <div class="form-group">
+                <label>Created</label>
+                <input type="text" value="<%= family.created_at ? new Date(family.created_at).toLocaleString('en-US') : 'Unknown' %>" readonly>
+              </div>
+              <div class="form-group">
+                <label>Last Updated</label>
+                <input type="text" value="<%= family.updated_at ? new Date(family.updated_at).toLocaleString('en-US') : 'Unknown' %>" readonly>
+              </div>
+              <div class="form-group">
+                <label>Family ID</label>
+                <input type="text" value="<%= family.id %>" readonly style="font-size: 0.75rem;">
+              </div>
+            </div>
+
+            <!-- Book Progress -->
+            <% if (bookData && bookData.visibleSections) { %>
+            <div class="detail-card">
+              <h3>Book Progress</h3>
+              <ul class="progress-list">
+                <% const sectionLabels = {
+                  before: 'Before Arrived',
+                  birth: 'Birth Story',
+                  home: 'Coming Home',
+                  months: 'Month by Month',
+                  family: 'Our Family',
+                  firsts: 'Your Firsts',
+                  holidays: 'Celebrations',
+                  letters: 'Letters',
+                  recipes: 'Family Recipes',
+                  vault: 'The Vault'
+                }; %>
+                <% Object.entries(sectionLabels).forEach(function([key, label]) { %>
+                  <li>
+                    <span class="check <%= bookData.visibleSections[key] ? 'check-yes' : 'check-no' %>">
+                      <%= bookData.visibleSections[key] ? '&#10003;' : '&#8212;' %>
+                    </span>
+                    <%= label %>
+                  </li>
+                <% }); %>
+              </ul>
+            </div>
+            <% } %>
+
+            <!-- Quick Links -->
+            <div class="detail-card">
+              <h3>Quick Links</h3>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <% if (family.subdomain) { %>
+                  <a href="/book/<%= family.subdomain %>" target="_blank" class="btn btn-secondary btn-sm">
+                    &#128214; View Public Book
+                  </a>
+                <% } %>
+                <% if (family.stripe_customer_id) { %>
+                  <a href="https://dashboard.stripe.com/customers/<%= family.stripe_customer_id %>" target="_blank" class="btn btn-secondary btn-sm">
+                    &#128179; Stripe Dashboard
+                  </a>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <% if (family.subdomain) { %>
+            <a href="/book/<%= family.subdomain %>" target="_blank" class="btn btn-secondary">View Book</a>
+          <% } %>
+          <div style="flex: 1;"></div>
+          <% if (family.is_active) { %>
+            <a href="/admin/families/<%= family.id %>/toggle-active" class="btn btn-danger btn-sm"
+               onclick="return confirm('Are you sure you want to deactivate this account?');">
+              Deactivate Account
+            </a>
+          <% } else { %>
+            <a href="/admin/families/<%= family.id %>/toggle-active" class="btn btn-success btn-sm">
+              Reactivate Account
+            </a>
+          <% } %>
+        </div>
+      </form>
+    </main>
   </div>
 </body>
 </html>

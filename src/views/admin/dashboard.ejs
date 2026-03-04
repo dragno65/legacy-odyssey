@@ -3,19 +3,131 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - Legacy Odyssey</title>
+  <title>Admin Dashboard — Legacy Odyssey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-  <div id="admin-dashboard">
-    <h1>Admin Dashboard</h1>
-    <nav>
-      <a href="/admin/families">Families</a>
-      <a href="/admin/logout">Logout</a>
-    </nav>
-    <section>
-      <h2>Overview</h2>
-      <p>Dashboard content goes here.</p>
-    </section>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <h2>&#10022; Legacy Odyssey</h2>
+        <span>Admin Portal</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin" class="active">
+          <span class="nav-icon">&#128202;</span> Dashboard
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="admin-email"><%= admin.email %></div>
+        <form action="/admin/logout" method="POST" style="display:inline;">
+          <button type="submit" class="logout-btn">&#x2192; Sign Out</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Customer overview and management</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Customers</div>
+          <div class="kpi-value"><%= stats.total %></div>
+        </div>
+        <div class="kpi-card kpi-active">
+          <div class="kpi-label">Active</div>
+          <div class="kpi-value"><%= stats.active %></div>
+        </div>
+        <div class="kpi-card kpi-trialing">
+          <div class="kpi-label">Trialing</div>
+          <div class="kpi-value"><%= stats.trialing %></div>
+        </div>
+        <div class="kpi-card kpi-canceled">
+          <div class="kpi-label">Canceled</div>
+          <div class="kpi-value"><%= stats.canceled %></div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name, email, or domain..." oninput="filterTable()">
+      </div>
+
+      <!-- Customer Table -->
+      <div class="table-container">
+        <table class="data-table" id="customersTable">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Email</th>
+              <th>Website</th>
+              <th>Status</th>
+              <th>Signed Up</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% families.forEach(function(fam) { %>
+              <tr data-search="<%= (fam.display_name || '').toLowerCase() %> <%= (fam.childName || '').toLowerCase() %> <%= (fam.email || '').toLowerCase() %> <%= (fam.subdomain || '').toLowerCase() %> <%= (fam.custom_domain || '').toLowerCase() %> <%= (fam.subscription_status || '').toLowerCase() %>">
+                <td class="cell-name">
+                  <%= fam.display_name || 'Unnamed' %>
+                  <% if (fam.childName) { %>
+                    <small><%= fam.childName %></small>
+                  <% } %>
+                </td>
+                <td class="cell-email"><%= fam.email %></td>
+                <td class="cell-domain">
+                  <% if (fam.custom_domain) { %>
+                    <a href="/book/<%= fam.subdomain %>" target="_blank"><%= fam.custom_domain %></a>
+                  <% } else if (fam.subdomain) { %>
+                    <a href="/book/<%= fam.subdomain %>" target="_blank"><%= fam.subdomain %>.legacyodyssey.com</a>
+                  <% } else { %>
+                    <span style="color: var(--ink-light);">No domain</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (!fam.is_active) { %>
+                    <span class="badge badge-inactive">Inactive</span>
+                  <% } else { %>
+                    <span class="badge badge-<%= fam.subscription_status %>"><%= fam.subscription_status %></span>
+                  <% } %>
+                </td>
+                <td class="cell-date">
+                  <%= fam.created_at ? new Date(fam.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' %>
+                </td>
+                <td>
+                  <a href="/admin/families/<%= fam.id %>" class="btn btn-secondary btn-sm">View</a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (families.length === 0) { %>
+        <div style="text-align: center; padding: 60px; color: var(--ink-light);">
+          <p>No customers yet.</p>
+        </div>
+      <% } %>
+    </main>
   </div>
+
+  <script>
+    function filterTable() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#customersTable tbody tr');
+      rows.forEach(function(row) {
+        const text = row.getAttribute('data-search') || '';
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+  </script>
 </body>
 </html>
