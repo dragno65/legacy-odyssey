@@ -32,6 +32,12 @@
         "projectId": "14daf713-2b41-4ac0-b413-1179afa6e6a9"
       }
     },
-    "owner": "dragno65"
+    "owner": "dragno65",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/14daf713-2b41-4ac0-b413-1179afa6e6a9"
+    }
   }
 }
